@@ -13,10 +13,6 @@ bertnado.egg-info/dependency_links.txt
 bertnado.egg-info/entry_points.txt
 bertnado.egg-info/requires.txt
 bertnado.egg-info/top_level.txt
-bertnado/bertnado.egg-info/PKG-INFO
-bertnado/bertnado.egg-info/SOURCES.txt
-bertnado/bertnado.egg-info/dependency_links.txt
-bertnado/bertnado.egg-info/top_level.txt
 bertnado/data/prepare_dataset.py
 bertnado/evaluation/feature_extraction.py
 bertnado/evaluation/predict.py

@@ -1,8 +1,8 @@
 [build-system]
 requires = [
-    "setuptools >= 61.0",
+    "setuptools >= 80.3.1",
     "wheel",
-    "setuptools_scm[toml]>=6.2",
+    "setuptools_scm[toml]>=8.3.1",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -10,27 +10,28 @@ build-backend = "setuptools.build_meta"
 name = "bertnado"
 authors = [
     {name = "Catherine Chahrour", email = "catherine.chahrour@msdtc.ox.ac.uk"}]
-description = ""
+description = "BertNado: A framework for training and evaluating transformer-based models for Chromatin binding"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = {text = "GNU GENERAL PUBLIC LICENSE Version 3"}
 dynamic = ["version"]
 
 dependencies = [
-    "anndata",
-    "click",
-    "crested",
-    "datasets ",
-    "loguru",
-    "matplotlib",
-    "pandas",
-    "peft ",
-    "pytest",
-    "scikit-learn",
-    "seaborn",
-    "torch",
-    "transformers",
-    "wandb",
+    "anndata==0.11.4",
+    "click==8.1.8",
+    "crested==1.4.1",
+    "datasets==3.6.0",
+    "loguru==0.7.3",
+    "matplotlib==3.8.4",
+    "modisco-lite==2.3.2",
+    "pandas==2.1.4",
+    "peft==0.15.1",
+    "pytest==8.3.5",
+    "scikit-learn==1.5.2",
+    "seaborn==0.13.2",
+    "torch==2.5.1",
+    "transformers==4.51.0",
+    "wandb==0.19.9"
 ]
 
 [project.scripts]
@@ -40,7 +41,6 @@ bertnado-sweep = "bertnado.training.sweep:run_sweep_cli"
 bertnado-train = "bertnado.training.full_train:full_train_cli"
 bertnado-predict = "bertnado.evaluation.predict:predict_and_evaluate_cli"
 bertnado-shap = "bertnado.evaluation.feature_extraction:extract_shap_features_cli"
-bertnado-run = "bertnado.cli:main"
 
 [tool.setuptools_scm]
 write_to = "bertnado/_version.py"

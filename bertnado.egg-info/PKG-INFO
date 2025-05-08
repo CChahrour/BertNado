@@ -1,25 +1,27 @@
 Metadata-Version: 2.4
 Name: bertnado
-Version: 0.1.dev1
+Version: 0.1.dev2
+Summary: BertNado: A framework for training and evaluating transformer-based models for Chromatin binding
 Author-email: Catherine Chahrour <catherine.chahrour@msdtc.ox.ac.uk>
 License: GNU GENERAL PUBLIC LICENSE Version 3
 Project-URL: Homepage, https://github.com/CChahrour/BertNado
-Requires-Python: >=3.10
+Requires-Python: >=3.11
 Description-Content-Type: text/markdown
-Requires-Dist: anndata
-Requires-Dist: click
-Requires-Dist: crested
-Requires-Dist: datasets
-Requires-Dist: loguru
-Requires-Dist: matplotlib
-Requires-Dist: pandas
-Requires-Dist: peft
-Requires-Dist: pytest
-Requires-Dist: scikit-learn
-Requires-Dist: seaborn
-Requires-Dist: torch
-Requires-Dist: transformers
-Requires-Dist: wandb
+Requires-Dist: anndata==0.11.4
+Requires-Dist: click==8.1.8
+Requires-Dist: crested==1.4.1
+Requires-Dist: datasets==3.6.0
+Requires-Dist: loguru==0.7.3
+Requires-Dist: matplotlib==3.8.4
+Requires-Dist: modisco-lite==2.3.2
+Requires-Dist: pandas==2.1.4
+Requires-Dist: peft==0.15.1
+Requires-Dist: pytest==8.3.5
+Requires-Dist: scikit-learn==1.5.2
+Requires-Dist: seaborn==0.13.2
+Requires-Dist: torch==2.5.1
+Requires-Dist: transformers==4.51.0
+Requires-Dist: wandb==0.19.9
 
 # BertNado
 

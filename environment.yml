@@ -5,19 +5,3 @@ channels:
 dependencies:
   - python=3.11
   - pip
-  - pip:
-      - torch
-      - crested
-      - anndata
-      - click
-      - crested
-      - datasets
-      - loguru
-      - matplotlib
-      - pandas
-      - peft
-      - pytest
-      - scikit-learn
-      - seaborn
-      - transformers
-      - wandb

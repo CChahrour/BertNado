@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bertnado.data.prepare_dataset &#8212; BertNado 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=61cd365c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=12dfc556" />
+    <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for bertnado.data.prepare_dataset</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">crested.utils</span> <span class="kn">import</span> <span class="n">fetch_sequences</span>
+<span class="kn">from</span> <span class="nn">datasets</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">DatasetDict</span>
+<span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="n">AutoTokenizer</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="tokenize_dataset">
+<a class="viewcode-back" href="../../../modules.html#bertnado.data.prepare_dataset.tokenize_dataset">[docs]</a>
+<span class="k">def</span> <span class="nf">tokenize_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">tokenizer_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tokenize the sequences in the dataset using a specified tokenizer.&quot;&quot;&quot;</span>
+    <span class="n">tokenizer</span> <span class="o">=</span> <span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">tokenizer_name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">tokenize_function</span><span class="p">(</span><span class="n">examples</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tokenizer</span><span class="p">(</span><span class="n">examples</span><span class="p">[</span><span class="s2">&quot;sequence&quot;</span><span class="p">],</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;max_length&quot;</span><span class="p">,</span> <span class="n">truncation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">tokenize_function</span><span class="p">,</span> <span class="n">batched</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="prepare_data">
+<a class="viewcode-back" href="../../../modules.html#bertnado.data.prepare_dataset.prepare_data">[docs]</a>
+<span class="k">def</span> <span class="nf">prepare_data</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">target_column</span><span class="p">,</span> <span class="n">fasta_file</span><span class="p">,</span> <span class="n">tokenizer_name</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load and split the dataset into training, validation, and test sets based on chromosome, fetch sequences, and convert to Hugging Face Dataset.&quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;region&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span>
+    <span class="n">data</span><span class="p">[[</span><span class="s2">&quot;chromosome&quot;</span><span class="p">,</span> <span class="s2">&quot;range&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;region&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;end&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;range&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;region&quot;</span><span class="p">,</span> <span class="s2">&quot;range&quot;</span><span class="p">])</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span>
+        <span class="p">[</span><span class="s2">&quot;chromosome&quot;</span><span class="p">,</span> <span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;end&quot;</span><span class="p">,</span> <span class="n">target_column</span><span class="p">]</span>
+    <span class="p">]</span>  <span class="c1"># Ensure necessary columns are included</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">target_column</span><span class="p">:</span> <span class="s2">&quot;labels&quot;</span><span class="p">})</span>
+
+    <span class="c1"># Split data by chromosome</span>
+    <span class="n">test</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;chromosome&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;chr9&quot;</span><span class="p">]</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;chromosome&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;chr8&quot;</span><span class="p">]</span>
+    <span class="n">train</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="o">~</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;chromosome&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="s2">&quot;chr8&quot;</span><span class="p">,</span> <span class="s2">&quot;chr9&quot;</span><span class="p">])]</span>
+
+    <span class="c1"># Fetch sequences from FASTA</span>
+    <span class="k">for</span> <span class="n">subset</span> <span class="ow">in</span> <span class="p">[</span><span class="n">train</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">test</span><span class="p">]:</span>
+        <span class="n">regions</span> <span class="o">=</span> <span class="n">subset</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;chromosome&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;start&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;end&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">subset</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;sequence&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fetch_sequences</span><span class="p">(</span><span class="n">regions</span><span class="p">,</span> <span class="n">genome</span><span class="o">=</span><span class="n">fasta_file</span><span class="p">)</span>
+
+    <span class="c1"># Convert to Hugging Face Dataset</span>
+    <span class="n">train_dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">train</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+    <span class="n">val_dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+    <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">test</span><span class="p">)</span>
+
+    <span class="c1"># Tokenize sequences</span>
+    <span class="n">train_dataset</span> <span class="o">=</span> <span class="n">tokenize_dataset</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="n">tokenizer_name</span><span class="p">)</span>
+    <span class="n">val_dataset</span> <span class="o">=</span> <span class="n">tokenize_dataset</span><span class="p">(</span><span class="n">val_dataset</span><span class="p">,</span> <span class="n">tokenizer_name</span><span class="p">)</span>
+    <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">tokenize_dataset</span><span class="p">(</span><span class="n">test_dataset</span><span class="p">,</span> <span class="n">tokenizer_name</span><span class="p">)</span>
+
+    <span class="n">dataset_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="n">train_dataset</span><span class="p">,</span>
+        <span class="s2">&quot;validation&quot;</span><span class="p">:</span> <span class="n">val_dataset</span><span class="p">,</span>
+        <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="n">test_dataset</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Save dataset to the specified output directory</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">DatasetDict</span><span class="p">(</span><span class="n">dataset_dict</span><span class="p">)</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">save_to_disk</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Prepare dataset for RUNX1 regressor.&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--file_path&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the input Parquet file.&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--target_column&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;22620_CAT_1_RUNX1&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the target column (default: 22620_CAT_1_RUNX1).&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--fasta_file&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the genome FASTA file.&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--output_dir&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Directory to save the output Dataset files.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--tokenizer_name&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;PoetschLab/GROVER&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the tokenizer to use.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="n">prepare_data</span><span class="p">(</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">target_column</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">fasta_file</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">tokenizer_name</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">output_dir</span>
+    <span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">BertNado</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">BertNado Modules</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, Catherine Chahrour.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
