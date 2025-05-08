@@ -7,6 +7,7 @@ from bertnado.cli import cli
 def runner():
     return CliRunner()
 
+out_dir = "test/mock"
 
 def test_prepare_data_cli(runner):
     result = runner.invoke(
@@ -22,13 +23,12 @@ def test_prepare_data_cli(runner):
             "--tokenizer-name",
             "PoetschLab/GROVER",
             "--output-dir",
-            "test/mock/dataset",
+            f"{out_dir}/dataset",
             "--task-type",
             "regression",
         ],
     )
     assert result.exit_code == 0
-
 
 def test_run_sweep_cli(runner):
     result = runner.invoke(
@@ -38,11 +38,11 @@ def test_run_sweep_cli(runner):
             "--config-path",
             "test/data/mock_sweep_config.json",
             "--output-dir",
-            "test/mock/sweep",
+            f"{out_dir}/sweep",
             "--model-name",
             "PoetschLab/GROVER",
             "--dataset",
-            "test/mock/dataset",
+            f"{out_dir}/dataset",
             "--sweep-count",
             "2",
             "--project-name",
@@ -53,20 +53,19 @@ def test_run_sweep_cli(runner):
     )
     assert result.exit_code == 0
 
-
 def test_full_train_cli(runner):
     result = runner.invoke(
         cli,
         [
             "full-train-cli",
             "--output-dir",
-            "test/mock/train",
+            f"{out_dir}/train",
             "--model-name",
             "PoetschLab/GROVER",
             "--dataset",
-            "test/mock/dataset",
+            f"{out_dir}/dataset",
             "--best-config-path",
-            "test/mock/sweep/best_sweep_config.json",
+            f"{out_dir}/sweep/best_sweep_config.json",
             "--task-type",
             "regression",
             "--project-name",
@@ -74,7 +73,6 @@ def test_full_train_cli(runner):
         ],
     )
     assert result.exit_code == 0
-
 
 def test_predict_and_evaluate_cli(runner):
     result = runner.invoke(
@@ -84,17 +82,16 @@ def test_predict_and_evaluate_cli(runner):
             "--tokenizer-name",
             "PoetschLab/GROVER",
             "--model-dir",
-            "test/mock/train/model",
+            f"{out_dir}/train/model",
             "--dataset-dir",
-            "test/mock/dataset",
+            f"{out_dir}/dataset",
             "--output-dir",
-            "test/mock/predictions",
+            f"{out_dir}/predictions",
             "--task-type",
             "regression",
         ],
     )
     assert result.exit_code == 0
-
 
 def test_feature_analysis_cli(runner):
     result = runner.invoke(
@@ -104,15 +101,15 @@ def test_feature_analysis_cli(runner):
             "--tokenizer-name",
             "PoetschLab/GROVER",
             "--model-dir",
-            "test/mock/train/model",
+            f"{out_dir}/train/model",
             "--dataset-dir",
-            "test/mock/dataset",
+            f"{out_dir}/dataset",
             "--output-dir",
-            "test/mock/feature_analysis",
+            f"{out_dir}/feature_analysis",
             "--task-type",
             "regression",
             "--method",
-            "shap",
+            "both",
         ],
     )
     assert result.exit_code == 0

@@ -1,18 +1,30 @@
 import os
 from datetime import datetime
-import wandb
+
+import torch
 from datasets import load_from_disk
 from transformers import AutoModelForSequenceClassification, TrainingArguments
-from bertnado.training.trainers import GeneralizedTrainer
+
+import wandb
 from bertnado.training.metrics import (
-    compute_metrics_regression,
     binary_classification_metrics,
+    compute_metrics_regression,
     multi_label_classification_metrics,
 )
+from bertnado.training.trainers import GeneralizedTrainer
 
 
 class FineTuner:
-    def __init__(self, model_name, dataset, output_dir, task_type, project_name, job_type, pos_weight=None):
+    def __init__(
+        self,
+        model_name,
+        dataset,
+        output_dir,
+        task_type,
+        project_name,
+        job_type,
+        pos_weight=None,
+    ):
         self.model_name = model_name
         self.dataset = dataset
         self.output_dir = output_dir
@@ -24,6 +36,16 @@ class FineTuner:
     def fine_tune(self, config):
         """Fine-tune the model using the provided configuration."""
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+        # Set device
+        device = (
+            "cuda"
+            if torch.cuda.is_available()
+            else "mps"
+            if torch.backends.mps.is_available()
+            else "cpu"
+        )
+        print(f"Using device: {device}")
         wandb.init(
             project=self.project_name,
             group=self.task_type,
@@ -50,7 +72,7 @@ class FineTuner:
         # Load model
         model = AutoModelForSequenceClassification.from_pretrained(
             self.model_name, num_labels=num_labels
-        )
+        ).to(device)
 
         # Define training arguments
         training_args = TrainingArguments(
@@ -93,7 +115,7 @@ class FineTuner:
 
         # Train the model
         trainer.train()
-        
+
         if self.job_type == "full_train":
             trainer.save_model(f"{self.output_dir}/model")
 

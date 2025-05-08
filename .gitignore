@@ -6,7 +6,7 @@ __pycache__/
 bertnado.egg-info
 bertnado/_version.py
 wandb/
-test/data
+
 test/mock
 catherine-chahrour-university-of-oxford
 
