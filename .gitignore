@@ -1,5 +1,6 @@
 __pycache__/
 .coverage
+.ruff_cache/
 .pytest_cache/
 bertnado.egg-info
 bertnado/_version.py

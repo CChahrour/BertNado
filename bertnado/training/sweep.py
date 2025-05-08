@@ -1,6 +1,5 @@
 import json
 import os
-from datetime import datetime
 import wandb
 from bertnado.training.full_train import full_train
 

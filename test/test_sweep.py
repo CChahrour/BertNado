@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from bertnado.training.sweep import run_sweep
 
 @patch("bertnado.training.sweep.json.load")

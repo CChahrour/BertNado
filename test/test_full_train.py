@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from bertnado.training.full_train import full_train
 
 @patch("bertnado.training.full_train.json.load")
