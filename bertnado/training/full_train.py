@@ -28,7 +28,7 @@ def full_train(
         project=project_name,
         group=task_type,
         job_type="full_train",
-        dir=f"{output_dir}/wandb",
+        dir=output_dir,
         name=f"full_train_{datetime.now().strftime('%Y-%m-%d_%H%M')}",
     )
 
@@ -97,14 +97,23 @@ def full_train(
     # Train the model
     trainer.train()
 
-    # Save the model
-    trainer.save_model(output_dir)
+    # Debug logs to verify model and tokenizer loading
+    if model is None:
+        raise ValueError("Failed to load the model. Ensure the model path is correct.")
+    if trainer.tokenizer is None:
+        raise ValueError("Failed to load the tokenizer. Ensure the tokenizer path is correct.")
+
+    # Save the model and tokenizer
+    trainer.save_model(f"{output_dir}/model")
+    trainer.tokenizer.save_pretrained(f"{output_dir}/model")
 
     wandb.finish()
 
 
 class FullTrainer:
-    def __init__(self, model_name, dataset, output_dir, task_type, project_name, pos_weight=None):
+    def __init__(
+        self, model_name, dataset, output_dir, task_type, project_name, pos_weight=None
+    ):
         self.model_name = model_name
         self.dataset = dataset
         self.output_dir = output_dir

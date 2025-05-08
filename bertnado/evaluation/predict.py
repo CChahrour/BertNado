@@ -6,19 +6,31 @@ from datasets import load_from_disk
 from sklearn.metrics import r2_score, accuracy_score, f1_score, roc_auc_score
 
 
-def predict_and_evaluate(model_path, test_path, output_dir, task_type):
+def predict_and_evaluate(tokenizer_name, model_path, dataset, output_dir, task_type):
     """Predict and evaluate results for different task types."""
-    # Load model and tokenizer
-    model = AutoModelForSequenceClassification.from_pretrained(model_path)
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
+    # Ensure the model path points to the directory containing the model files
+    if not os.path.isdir(model_path):
+        raise ValueError(f"Model path {model_path} is not a directory. Please provide a valid directory.")
 
+    # Load model and tokenizer
+    print(f"Model loading from {model_path}")
+    model = AutoModelForSequenceClassification.from_pretrained(model_path, local_files_only=True)
+    print(f"Model loaded from {model_path}")
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+    print(f"Tokenizer loaded from {tokenizer_name}")
+    
     # Load test dataset
-    test_dataset = load_from_disk(test_path)
+    dataset = load_from_disk(dataset)
+    test_dataset = dataset["test"]
 
     # Make predictions
     predictions = []
     true_values = []
-    for example in test_dataset:
+    for idx, example in enumerate(test_dataset):
+        if not isinstance(example, dict) or "sequence" not in example:
+            print(f"Invalid example at index {idx}: {example}")
+            raise ValueError("Each example in the dataset must be a dictionary containing a 'sequence' key.")
+
         inputs = tokenizer(
             example["sequence"], return_tensors="pt", padding=True, truncation=True
         )
@@ -27,13 +39,13 @@ def predict_and_evaluate(model_path, test_path, output_dir, task_type):
 
         if task_type == "binary_classification":
             predictions.append((logits > 0).astype(int))
-            true_values.append(example["label"])
+            true_values.append(example["labels"])
         elif task_type == "multilabel_classification":
             predictions.append((logits > 0).astype(int))
             true_values.append(example["labels"])
         elif task_type == "regression":
             predictions.append(logits.item())
-            true_values.append(example["label"])
+            true_values.append(example["labels"])
         else:
             raise ValueError(f"Unsupported task type: {task_type}")
 
@@ -66,7 +78,8 @@ def predict_and_evaluate(model_path, test_path, output_dir, task_type):
 
 
 class Evaluator:
-    def __init__(self, model_dir, dataset_dir, output_dir, task_type):
+    def __init__(self, tokenizer_name, model_dir, dataset_dir, output_dir, task_type):
+        self.tokenizer_name = tokenizer_name
         self.model_dir = model_dir
         self.dataset_dir = dataset_dir
         self.output_dir = output_dir
@@ -75,6 +88,7 @@ class Evaluator:
     def evaluate(self):
         """Perform predictions and evaluate the model."""
         predict_and_evaluate(
+            self.tokenizer_name,
             self.model_dir,
             self.dataset_dir,
             self.output_dir,
@@ -89,10 +103,16 @@ if __name__ == "__main__":
         description="Predict and evaluate results for different task types."
     )
     parser.add_argument(
-        "--model_path", type=str, required=True, help="Path to the fine-tuned model."
+        "--tokenizer_name",
+        type=str,
+        required=True,
+        help="Name of the tokenizer to use.",
     )
     parser.add_argument(
-        "--test_path", type=str, required=True, help="Path to the test dataset."
+        "--model_dir", type=str, required=True, help="Path to the fine-tuned model."
+    )
+    parser.add_argument(
+        "--dataset_dir", type=str, required=True, help="Path to the test dataset."
     )
     parser.add_argument(
         "--output_dir", type=str, required=True, help="Directory to save the plot."
@@ -108,6 +128,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     evaluator = Evaluator(
-        args.model_path, args.test_path, args.output_dir, args.task_type
-    )
+        args.tokenizer_name,
+        args.model_dir, 
+        args.dataset_dir,
+        args.output_dir,
+        args.task_type,
+    )    
     evaluator.evaluate()

@@ -7,8 +7,8 @@ bertnado.egg-info
 bertnado/_version.py
 wandb/
 test/data
-test/mock_dataset
-test/mock_output_dir
+test/mock
+catherine-chahrour-university-of-oxford
 
 # Ignore macOS system files
 .DS_Store

@@ -42,8 +42,7 @@ bertnado-data = "bertnado.cli:prepare_data_cli"
 bertnado-sweep = "bertnado.cli:run_sweep_cli"
 bertnado-train = "bertnado.cli:full_train_cli"
 bertnado-predict = "bertnado.cli:predict_and_evaluate_cli"
-bertnado-shap = "bertnado.cli:shap_analysis_cli"
-bertnado-grad = "bertnado.cli:feature_analysis_cli"
+bertnado-feature = "bertnado.cli:feature_analysis_cli"
 
 [tool.setuptools_scm]
 write_to = "bertnado/_version.py"

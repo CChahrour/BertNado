@@ -83,11 +83,15 @@ def prepare_data_cli(file_path, target_column, fasta_file, tokenizer_name, outpu
     ),
     help="Task type.",
 )
-def run_sweep_cli(config_path, output_dir, model_name, dataset, sweep_count, project_name, task_type):
+def run_sweep_cli(
+    config_path, output_dir, model_name, dataset, sweep_count, project_name, task_type
+):
     """Run hyperparameter sweep."""
     with open(config_path, "r") as config_file:
         sweep_config = json.load(config_file)
-    sweep_config["name"] = f"{project_name}_{task_type}_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    sweep_config["name"] = (
+        f"{project_name}_{task_type}_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    )
 
     # Extract metric settings from the sweep configuration
     metric_name = sweep_config["metric"]["name"]
@@ -110,7 +114,9 @@ def run_sweep_cli(config_path, output_dir, model_name, dataset, sweep_count, pro
     sweep = api.sweep(f"{project_name}/{sweep_id}")
     best_run = sorted(
         sweep.runs,
-        key=lambda r: r.summary.get(metric_name, float("-inf") if metric_goal == "maximize" else float("inf")),
+        key=lambda r: r.summary.get(
+            metric_name, float("-inf") if metric_goal == "maximize" else float("inf")
+        ),
         reverse=(metric_goal == "maximize"),
     )[0]
     best_config = best_run.config
@@ -120,7 +126,9 @@ def run_sweep_cli(config_path, output_dir, model_name, dataset, sweep_count, pro
     with open(best_config_path, "w") as best_config_file:
         json.dump(best_config, best_config_file, indent=2)
 
-    print(f"Best run: {best_run.id} | {metric_name}: {best_run.summary.get(metric_name, 0)}")
+    print(
+        f"Best run: {best_run.id} | {metric_name}: {best_run.summary.get(metric_name, 0)}"
+    )
     print(f"Best configuration saved to {best_config_path}")
     wandb.finish()
 
@@ -166,6 +174,12 @@ def full_train_cli(
 
 @cli.command()
 @click.option(
+    "--tokenizer-name",
+    default="PoetschLab/GROVER",
+    type=str,
+    help="Name of the tokenizer to use.",
+)
+@click.option(
     "--model-dir",
     required=True,
     type=click.Path(),
@@ -188,40 +202,10 @@ def full_train_cli(
     ),
     help="Task type.",
 )
-def predict_and_evaluate_cli(model_dir, dataset_dir, output_dir, task_type):
+def predict_and_evaluate_cli(tokenizer_name, model_dir, dataset_dir, output_dir, task_type):
     """Make predictions and evaluate the model."""
-    evaluator = Evaluator(model_dir, dataset_dir, output_dir, task_type)
+    evaluator = Evaluator(tokenizer_name, model_dir, dataset_dir, output_dir, task_type)
     evaluator.evaluate()
-
-
-@cli.command()
-@click.option(
-    "--model-dir",
-    required=True,
-    type=click.Path(),
-    help="Path to the fine-tuned model.",
-)
-@click.option(
-    "--dataset-dir", required=True, type=click.Path(), help="Path to the test dataset."
-)
-@click.option(
-    "--output-dir",
-    required=True,
-    type=click.Path(),
-    help="Directory to save the SHAP analysis results.",
-)
-@click.option(
-    "--task-type",
-    required=True,
-    type=click.Choice(
-        ["binary_classification", "multilabel_classification", "regression"]
-    ),
-    help="Task type.",
-)
-def shap_analysis_cli(model_dir, dataset_dir, output_dir, task_type):
-    """Perform SHAP analysis."""
-    attributer = Attributer(model_dir, dataset_dir, output_dir, task_type)
-    attributer.extract()
 
 
 @cli.command()

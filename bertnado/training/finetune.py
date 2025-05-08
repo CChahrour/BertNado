@@ -93,10 +93,6 @@ class FineTuner:
 
         # Train the model
         trainer.train()
-
-        # Save the model
-        trainer.save_model(self.output_dir)
-
         wandb.finish()
 
 
