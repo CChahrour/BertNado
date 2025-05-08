@@ -22,11 +22,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install .[dev]
 
-    - name: Make data 
-      run: |
-        python test/mock_dataset.py
-        python test/mock_fasta.py
-
     - name: Run tests
       run: |
         pytest test/

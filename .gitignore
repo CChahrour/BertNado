@@ -1,33 +1,20 @@
 __pycache__/
 .coverage
-.ruff_cache/
+.DS_Store
+.idea/
 .pytest_cache/
+.ruff_cache/
+.venv/
+.vscode/
+*.log
+*.tmp
 2025*
 bertnado.egg-info
 bertnado/_version.py
-wandb/
-
-test/mock
-catherine-chahrour-university-of-oxford
-
-# Ignore macOS system files
-.DS_Store
-
-# Ignore logs and temporary files
-*.log
-*.tmp
-
-# Ignore build artifacts
-dist/
 build/
-
-# Ignore virtual environments
-venv/
-.venv/
-
-# Ignore IDE/editor files
-.vscode/
-.idea/
-
-# Ignore Sphinx build files
+catherine*
+dist/
 docs/_build/
+test/mock
+venv/
+wandb/
