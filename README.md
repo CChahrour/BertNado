@@ -19,8 +19,8 @@ Built for **regression**, **binary**, and **multi-label classification** tasks w
 ## 📦 Installation
 
 ```bash
-git clone https://github.com/CChahrour/bertnado.git
-cd bertnado
+git clone https://github.com/CChahrour/BertNado.git
+cd BertNado
 pip install -e .
 ```
 
