@@ -1,0 +1,8 @@
+[console_scripts]
+bertnado = bertnado.cli:main
+bertnado-data = bertnado.data.prepare_dataset:prepare_data
+bertnado-predict = bertnado.evaluation.predict:predict_and_evaluate
+bertnado-run = bertnado.cli:main
+bertnado-shap = bertnado.evaluation.feature_extraction:extract_shap_features
+bertnado-sweep = bertnado.training.sweep:run_sweep
+bertnado-train = bertnado.training.full_train:full_train

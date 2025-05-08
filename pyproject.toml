@@ -1,25 +1,53 @@
-[project]
-name = "bertnado"
-version = "0.1.0"
-description = "A package for sequence-based transformer models."
-readme = "README.md"
-license = {text = "MIT"}
-authors = [
-    {name = "Catherine", email = "catherine.chahrour@msdtc.ox.ac.uk"}
-]
-requires-python = ">=3.8"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-]
-
-[project.urls]
-Homepage = "https://github.com/CChahrour/bertnado"
-
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = [
+    "setuptools >= 61.0",
+    "wheel",
+    "setuptools_scm[toml]>=6.2",
+]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools.packages.find]
-where = ["bertnado"]
+[project]
+name = "bertnado"
+authors = [
+    {name = "Catherine Chahrour", email = "catherine.chahrour@msdtc.ox.ac.uk"}]
+description = ""
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "GNU GENERAL PUBLIC LICENSE Version 3"}
+dynamic = ["version"]
+
+dependencies = [
+    "anndata",
+    "click",
+    "crested",
+    "datasets ",
+    "loguru",
+    "matplotlib",
+    "pandas",
+    "peft ",
+    "pytest",
+    "scikit-learn",
+    "seaborn",
+    "torch",
+    "transformers",
+    "wandb",
+]
+
+[project.scripts]
+bertnado = "bertnado.cli:cli"
+bertnado-data = "bertnado.cli:prepare_data_cli"
+bertnado-sweep = "bertnado.training.sweep:run_sweep_cli"
+bertnado-train = "bertnado.training.full_train:full_train_cli"
+bertnado-predict = "bertnado.evaluation.predict:predict_and_evaluate_cli"
+bertnado-shap = "bertnado.evaluation.feature_extraction:extract_shap_features_cli"
+bertnado-run = "bertnado.cli:main"
+
+[tool.setuptools_scm]
+write_to = "bertnado/_version.py"
+local_scheme = "no-local-version"
+
+[tool.setuptools]
+packages = ["bertnado"]
+
+[project.urls]
+Homepage = "https://github.com/CChahrour/BertNado"
