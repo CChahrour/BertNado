@@ -3,5 +3,5 @@ __pycache__/
 .pytest_cache/
 bertnado.egg-info
 .coverage
-mock*
+
 run.sh
