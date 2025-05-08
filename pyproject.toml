@@ -1,0 +1,25 @@
+[project]
+name = "bertnado"
+version = "0.1.0"
+description = "A package for sequence-based transformer models."
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Catherine", email = "catherine.chahrour@msdtc.ox.ac.uk"}
+]
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/CChahrour/bertnado"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["bertnado"]

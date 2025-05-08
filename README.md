@@ -1,0 +1,33 @@
+# BertNado
+
+Package to implement HF models for chromatin binding protein binding predictions from sequence. 
+
+Generalises the use so models can be run as regressor, binary classifier, or multi-label classifier.
+
+## Data preparation
+
+Prepare dataset from parquet file given the column name(s) of the target(s). 
+Fetches sequences using crested fetch_sequences and tokenises the sequence saving as huggingface dataset. Data is split by chromosome using chr 9 for test, chr8 for eval and the remaining for training. Training rows are shuffled.
+
+## Model
+
+Model is configured for regression task with peft lora to reduce to the minimal model parameters for efficient training. 
+
+## Hyperparameter sweep
+
+Hyperparameter sweeping from config json file to wandb. 
+The sweep_config.json defines a hyperparameter sweep configuration using the Bayesian optimization method. It includes parameters such as batch sizes, learning rate, dropout, and LoRA-specific parameters.
+from 10 Sweeps, optimised for maximising F1 score, saves best_config.json to output dir. 
+
+## Fine-tuning
+
+Model is fine-tuned using the best config from the HP sweep and saved to output dir. Training is logged to wandb and can be run on MPS or Cuda.
+
+## Predict
+
+CBP binding is predicted for the chr9 regions. predicted vs true scatter plot with R2 score is saved to output/figures for regresssion, for classification tasks, ROC-Curve and PR-curve is plotted, for binary classifer confusion matrix is plotted.
+
+## Token feature extraction
+
+SHAP is run to find the important tokens used by the model in predicting bound sequences. These are plotted as a bar chart and the figure is saved to output/figures. the SHAP scores are saved as a pickle to output/shap
+

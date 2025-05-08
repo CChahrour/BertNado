@@ -1,0 +1,14 @@
+anndata
+click
+crested
+datasets 
+loguru
+matplotlib
+pandas
+peft 
+pytest
+scikit-learn
+seaborn
+torch
+transformers
+wandb
