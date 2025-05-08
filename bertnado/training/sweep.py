@@ -29,6 +29,7 @@ class Sweeper:
                 output_dir=f"{self.output_dir}/sweep_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}",
                 task_type=self.task_type,
                 project_name=self.project_name,
+                job_type="sweep",
             )
             fine_tuner.fine_tune(config)
 

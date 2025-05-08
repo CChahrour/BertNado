@@ -41,3 +41,13 @@ def test_full_train_cli(runner):
         "--project-name", "mock_project"
     ])
     assert result.exit_code == 0
+
+# def test_predict_and_evaluate_cli(runner):
+#     result = runner.invoke(cli, [
+#         "predict_and_evaluate_cli",
+#         "--model-path", "test/mock_model_path",
+#         "--dataset", "test/mock_dataset",
+#         "--output-dir", "test/mock_output_dir",
+#         "--task-type", "regression"
+#     ])
+#     assert result.exit_code == 0

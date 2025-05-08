@@ -12,13 +12,14 @@ from bertnado.training.metrics import (
 
 
 class FineTuner:
-    def __init__(self, model_name, dataset, output_dir, task_type, project_name, pos_weight=None):
+    def __init__(self, model_name, dataset, output_dir, task_type, project_name, job_type, pos_weight=None):
         self.model_name = model_name
         self.dataset = dataset
         self.output_dir = output_dir
         self.task_type = task_type
         self.project_name = project_name
         self.pos_weight = pos_weight
+        self.job_type = job_type
 
     def fine_tune(self, config):
         """Fine-tune the model using the provided configuration."""
@@ -26,8 +27,8 @@ class FineTuner:
         wandb.init(
             project=self.project_name,
             group=self.task_type,
-            job_type="finetune",
-            dir=f"{self.output_dir}/wandb",
+            job_type="sweep" if self.job_type == "sweep" else "full_train",
+            dir=f"{self.output_dir}",
             name=f"run_{datetime.now().strftime('%Y-%m-%d_%H%M')}",
         )
 
@@ -153,6 +154,7 @@ if __name__ == "__main__":
         task_type=args.task_type,
         project_name="FineTuningProject",
         pos_weight=args.pos_weight,
+        job_type="fine_tune",
     )
 
     fine_tuner.fine_tune(config)

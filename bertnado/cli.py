@@ -122,6 +122,7 @@ def run_sweep_cli(config_path, output_dir, model_name, dataset, sweep_count, pro
 
     print(f"Best run: {best_run.id} | {metric_name}: {best_run.summary.get(metric_name, 0)}")
     print(f"Best configuration saved to {best_config_path}")
+    wandb.finish()
 
 
 @cli.command()

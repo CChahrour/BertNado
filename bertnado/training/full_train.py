@@ -111,6 +111,7 @@ class FullTrainer:
         self.task_type = task_type
         self.project_name = project_name
         self.pos_weight = pos_weight
+        self.job_type = "full_train"
 
     def train(self, best_config_path):
         with open(best_config_path, "r") as config_file:
@@ -123,6 +124,7 @@ class FullTrainer:
             task_type=self.task_type,
             project_name=self.project_name,
             pos_weight=self.pos_weight,
+            job_type="full_train",
         )
         fine_tuner.fine_tune(config)
 
@@ -184,5 +186,6 @@ if __name__ == "__main__":
         task_type=args.task_type,
         project_name=args.project_name,
         pos_weight=args.pos_weight,
+        job_type="full_train",
     )
     trainer.train(args.best_config_path)
