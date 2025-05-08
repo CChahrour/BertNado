@@ -267,5 +267,10 @@ def feature_analysis_cli(tokenizer_name, model_dir, dataset_dir, output_dir, tas
         attributer.visualize_lig()
 
 
+# Register underscore aliases for commands to satisfy tests
+cli.add_command(predict_and_evaluate_cli, name="predict_and_evaluate_cli")
+cli.add_command(feature_analysis_cli, name="feature_analysis_cli")
+
+
 if __name__ == "__main__":
     cli()
