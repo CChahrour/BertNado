@@ -1,5 +1,6 @@
 import json
 import os
+import datetime
 import random
 import math
 from .finetune import FineTuner
@@ -25,7 +26,7 @@ class Sweeper:
             fine_tuner = FineTuner(
                 model_name=self.model_name,
                 dataset=self.dataset,
-                output_dir=f"{self.output_dir}/sweep_{i}",
+                output_dir=f"{self.output_dir}/sweep_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}",
                 task_type=self.task_type,
                 project_name=self.project_name,
             )

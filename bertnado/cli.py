@@ -1,6 +1,7 @@
 import datetime
 import click
 import json
+import os
 import wandb
 from bertnado.data.prepare_dataset import DatasetPreparer
 from bertnado.training.sweep import Sweeper
@@ -82,25 +83,45 @@ def prepare_data_cli(file_path, target_column, fasta_file, tokenizer_name, outpu
     ),
     help="Task type.",
 )
-def run_sweep_cli(
-    config_path, output_dir, model_name, dataset, sweep_count, project_name, task_type
-):
+def run_sweep_cli(config_path, output_dir, model_name, dataset, sweep_count, project_name, task_type):
     """Run hyperparameter sweep."""
     with open(config_path, "r") as config_file:
         sweep_config = json.load(config_file)
-    sweep_config["name"] = f"sweep_{datetime.datetime.now().strftime('%Y-%m-%d_%H%M')}"
+    sweep_config["name"] = f"{project_name}_{task_type}_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+
+    # Extract metric settings from the sweep configuration
+    metric_name = sweep_config["metric"]["name"]
+    metric_goal = sweep_config["metric"]["goal"]
+
     # Initialize the sweep with wandb
     sweep_id = wandb.sweep(sweep_config, project=project_name)
 
     # Run the sweep using wandb agent
-    for _ in range(sweep_count):
-        wandb.agent(
-            sweep_id,
-            function=lambda: Sweeper(
-                config_path, output_dir, model_name, dataset, task_type, project_name
-            ).run(1),
-            count=sweep_count,
-        )
+    wandb.agent(
+        sweep_id,
+        function=lambda: Sweeper(
+            config_path, output_dir, model_name, dataset, task_type, project_name
+        ).run(1),
+        count=sweep_count,
+    )
+
+    # Retrieve the best run from the sweep
+    api = wandb.Api()
+    sweep = api.sweep(f"{project_name}/{sweep_id}")
+    best_run = sorted(
+        sweep.runs,
+        key=lambda r: r.summary.get(metric_name, float("-inf") if metric_goal == "maximize" else float("inf")),
+        reverse=(metric_goal == "maximize"),
+    )[0]
+    best_config = best_run.config
+
+    # Save the best configuration to a JSON file
+    best_config_path = os.path.join(output_dir, "best_sweep_config.json")
+    with open(best_config_path, "w") as best_config_file:
+        json.dump(best_config, best_config_file, indent=2)
+
+    print(f"Best run: {best_run.id} | {metric_name}: {best_run.summary.get(metric_name, 0)}")
+    print(f"Best configuration saved to {best_config_path}")
 
 
 @cli.command()
