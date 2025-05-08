@@ -33,7 +33,7 @@ dependencies = [
     "shap==0.47.1",
     "torch==2.5.1",
     "transformers==4.51.0",
-    "wandb==0.19.9",
+    "wandb==0.19.9"
 ]
 
 [project.scripts]
