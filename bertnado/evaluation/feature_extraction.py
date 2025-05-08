@@ -117,44 +117,6 @@ class Attributer:
         plt.savefig(f"{self.output_dir}/lig/figures/lig_visualization.png")
         plt.close()
 
-    def match_motifs(self, motifs):
-        """Match motifs in tokenized sequences based on attributions.
-
-        Args:
-            motifs (list of str): List of motifs (regex patterns) to match.
-
-        Returns:
-            dict: A dictionary where keys are motif patterns and values are lists of matching token indices.
-        """
-        lig_path = f"{self.output_dir}/lig/lig_attributions.pkl"
-
-        # Load LIG attributions
-        with open(lig_path, "rb") as f:
-            import pickle
-            attributions = pickle.load(f)
-
-        # Load test dataset
-        test_dataset = load_from_disk(self.dataset_dir)
-
-        # Prepare data for motif matching
-        tokenizer = AutoTokenizer.from_pretrained(self.model_dir)
-        tokenized_sequences = [
-            tokenizer(example["sequence"], return_tensors="pt", padding=True, truncation=True)["input_ids"]
-            for example in test_dataset
-        ]
-
-        # Match motifs
-        motif_matches = {motif: [] for motif in motifs}
-        for i, tokens in enumerate(tokenized_sequences):
-            token_strings = tokenizer.convert_ids_to_tokens(tokens[0])
-            for motif in motifs:
-                pattern = re.compile(motif)
-                for j, token in enumerate(token_strings):
-                    if pattern.match(token):
-                        motif_matches[motif].append((i, j))
-
-        return motif_matches
-
 
 if __name__ == "__main__":
     import argparse
