@@ -7,9 +7,11 @@ from bertnado.cli import cli
 def runner():
     return CliRunner()
 
+
 out_dir = "test/mock"
 
-def test_prepare_data_cli(runner):
+
+def test_prepare_data_cli(runner: CliRunner):
     result = runner.invoke(
         cli,
         [
@@ -30,7 +32,8 @@ def test_prepare_data_cli(runner):
     )
     assert result.exit_code == 0
 
-def test_run_sweep_cli(runner):
+
+def test_run_sweep_cli(runner: CliRunner):
     result = runner.invoke(
         cli,
         [
@@ -53,7 +56,8 @@ def test_run_sweep_cli(runner):
     )
     assert result.exit_code == 0
 
-def test_full_train_cli(runner):
+
+def test_full_train_cli(runner: CliRunner):
     result = runner.invoke(
         cli,
         [
@@ -74,7 +78,8 @@ def test_full_train_cli(runner):
     )
     assert result.exit_code == 0
 
-def test_predict_and_evaluate_cli(runner):
+
+def test_predict_and_evaluate_cli(runner: CliRunner):
     result = runner.invoke(
         cli,
         [
@@ -93,7 +98,8 @@ def test_predict_and_evaluate_cli(runner):
     )
     assert result.exit_code == 0
 
-def test_feature_analysis_cli(runner):
+
+def test_feature_analysis_cli(runner: CliRunner):
     result = runner.invoke(
         cli,
         [

@@ -28,7 +28,7 @@ class Attributer:
 
         # Load model and tokenizer
         model = AutoModelForSequenceClassification.from_pretrained(
-            self.model_path, local_files_only=True, trust_remote_code=True
+            self.model_dir, local_files_only=True, trust_remote_code=True
         )
         tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_name)
 
@@ -156,7 +156,7 @@ if __name__ == "__main__":
         help="Name of the tokenizer to use.",
     )
     parser.add_argument(
-        "--model_path", type=str, required=True, help="Path to the fine-tuned model."
+        "--model_dir", type=str, required=True, help="Path to the fine-tuned model."
     )
     parser.add_argument(
         "--test_path", type=str, required=True, help="Path to the test dataset."
@@ -175,7 +175,7 @@ if __name__ == "__main__":
 
     attributer = Attributer(
         args.tokenizer_name,
-        args.model_path,
+        args.model_dir,
         args.test_path,
         args.output_dir,
         args.task_type,
