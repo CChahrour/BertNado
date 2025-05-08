@@ -9,11 +9,11 @@ def test_prepare_data(mock_makedirs, mock_read_parquet):
     mock_read_parquet.return_value = MagicMock()
 
     # Mock inputs
-    file_path = "mock_file.parquet"
-    target_column = "mock_target"
-    fasta_file = "mock_fasta.fa"
-    tokenizer_name = "mock_tokenizer"
-    output_dir = "mock_output_dir"
+    file_path = "test/mock_data.parquet"
+    target_column = "test_A"
+    fasta_file = "test/mock_genome.fasta"
+    tokenizer_name = "PoetschLab/GROVER"
+    output_dir = "test/mock_output_dir"
 
     # Call the function
     try:

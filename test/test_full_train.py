@@ -10,7 +10,7 @@ def test_full_train(mock_open, mock_json_load):
 
     # Mock inputs
     output_dir = "mock_output_dir"
-    model_name = "mock_model"
+    model_name = "PoetschLab/GROVER"
     dataset = "mock_dataset"
     best_config_path = "mock_best_config.json"
     task_type = "regression"

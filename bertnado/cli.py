@@ -55,7 +55,7 @@ def prepare_data_cli(file_path, target_column, fasta_file, tokenizer_name, outpu
     help="Directory to save the best model.",
 )
 @click.option(
-    "--model-name", required=True, type=str, help="Name of the pre-trained model."
+    "--model-name", default="PoetschLab/GROVER", type=str, help="Name of the pre-trained model."
 )
 @click.option(
     "--dataset", required=True, type=click.Path(), help="Path to the dataset."
@@ -84,7 +84,7 @@ def run_sweep_cli(config_path, output_dir, model_name, dataset, sweep_count, pro
     help="Directory to save the fine-tuned model.",
 )
 @click.option(
-    "--model-name", required=True, type=str, help="Name of the pre-trained model."
+    "--model-name", default="PoetschLab/GROVER", type=str, help="Name of the pre-trained model."
 )
 @click.option(
     "--dataset", required=True, type=click.Path(), help="Path to the dataset."

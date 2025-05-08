@@ -103,7 +103,10 @@ if __name__ == "__main__":
         help="Directory to save the fine-tuned model.",
     )
     parser.add_argument(
-        "--model_name", type=str, required=True, help="Name of the pre-trained model."
+        "--model_name",
+        type=str,
+        default="PoetschLab/GROVER",
+        help="Name of the pre-trained model.",
     )
     parser.add_argument(
         "--dataset", type=str, required=True, help="Path to the dataset."
