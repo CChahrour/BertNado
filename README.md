@@ -1,33 +1,156 @@
-# BertNado
+# 🌪️ BertNado
 
-Package to implement HF models for chromatin binding protein binding predictions from sequence. 
+**BertNado** is a Python package for predicting chromatin-binding protein (CBP) binding from DNA sequence using Hugging Face transformers.  
+Built for **regression**, **binary**, and **multi-label classification** tasks with efficient fine-tuning via **PEFT/LoRA** and rich model interpretation.
 
-Generalises the use so models can be run as regressor, binary classifier, or multi-label classifier.
+---
 
-## Data preparation
+## 🧬 Features
 
-Prepare dataset from parquet file given the column name(s) of the target(s). 
-Fetches sequences using crested fetch_sequences and tokenises the sequence saving as huggingface dataset. Data is split by chromosome using chr 9 for test, chr8 for eval and the remaining for training. Training rows are shuffled.
+- ✅ Support for **regression**, **binary**, and **multi-label classification**
+- ⚡ Efficient fine-tuning using **LoRA (Low-Rank Adaptation)**
+- 🧠 Model interpretation via **SHAP** and **Captum (LIG)**
+- 📊 Evaluation plots: **R²**, **ROC**, **PR**, **confusion matrix**
+- 🧪 Chromosome-aware train/val/test split
+- 🎯 Hyperparameter optimization via **Bayesian W&B sweeps**
+- 🧱 Clean CLI interface for training, predicting, and interpreting
 
-## Model
+---
 
-Model is configured for regression task with peft lora to reduce to the minimal model parameters for efficient training. 
+## 📦 Installation
 
-## Hyperparameter sweep
+```bash
+git clone https://github.com/yourusername/bertnado.git
+cd bertnado
+pip install -e .
+```
 
-Hyperparameter sweeping from config json file to wandb. 
-The sweep_config.json defines a hyperparameter sweep configuration using the Bayesian optimization method. It includes parameters such as batch sizes, learning rate, dropout, and LoRA-specific parameters.
-from 10 Sweeps, optimised for maximising F1 score, saves best_config.json to output dir. 
+---
 
-## Fine-tuning
+## 📁 Project Structure
 
-Model is fine-tuned using the best config from the HP sweep and saved to output dir. Training is logged to wandb and can be run on MPS or Cuda.
+```
+bertnado/
+├── cli.py                      # Command-line interface
+├── data/
+│   └── prepare_dataset.py      # Dataset creation and tokenization
+├── evaluation/
+│   ├── predict.py              # Predict from trained models
+│   └── feature_extraction.py   # SHAP / LIG-based interpretation
+└── training/
+    ├── finetune.py             # Fine-tuning using best config
+    ├── full_train.py           # Full training loop
+    ├── model.py                # PEFT/LoRA model architecture
+    ├── sweep.py                # W&B sweep setup
+    ├── trainers.py             # Trainer wrappers
+    └── metrics.py              # Metric computation
+```
 
-## Predict
+---
 
-CBP binding is predicted for the chr9 regions. predicted vs true scatter plot with R2 score is saved to output/figures for regresssion, for classification tasks, ROC-Curve and PR-curve is plotted, for binary classifer confusion matrix is plotted.
+## 🚀 Quickstart
 
-## Token feature extraction
+### Step 1: Prepare Dataset
 
-SHAP is run to find the important tokens used by the model in predicting bound sequences. These are plotted as a bar chart and the figure is saved to output/figures. the SHAP scores are saved as a pickle to output/shap
+```bash
+bertnado-data \
+  --file-path test/data/mock_data.parquet \
+  --target-column test_A \
+  --fasta-file test/data/mock_genome.fasta \
+  --tokenizer-name PoetschLab/GROVER \
+  --output-dir output/dataset \
+  --task-type regression
+```
 
+---
+
+### Step 2: Run Hyperparameter Sweep
+
+```bash
+bertnado-sweep \
+  --config-path test/data/mock_sweep_config.json \
+  --output-dir output/sweep \
+  --model-name PoetschLab/GROVER \
+  --dataset output/dataset \
+  --sweep-count 2 \
+  --project-name project \
+  --task-type regression
+```
+
+---
+
+### Step 3: Train Best Model
+
+```bash
+bertnado-train \
+  --output-dir output/train \
+  --model-name PoetschLab/GROVER \
+  --dataset output/dataset \
+  --best-config-path output/sweep/best_sweep_config.json \
+  --task-type regression \
+  --project-name project
+```
+
+---
+
+### Step 4: Predict on Test Set
+
+```bash
+bertnado-predict \
+  --tokenizer-name PoetschLab/GROVER \
+  --model-dir output/train/model \
+  --dataset-dir output/dataset \
+  --output-dir output/predictions \
+  --task-type regression
+```
+
+---
+
+### Step 5: Interpret Model with SHAP or LIG
+
+```bash
+bertnado-feature \
+  --tokenizer-name PoetschLab/GROVER \
+  --model-dir output/train/model \
+  --dataset-dir output/dataset \
+  --output-dir output/feature_analysis \
+  --task-type regression \
+  --method shap
+```
+
+Run both SHAP and LIG:
+
+```bash
+--method both
+```
+
+---
+
+## 📈 Outputs
+
+- 📊 **Figures** saved to `output/figures/`
+  - Regression: R² scatter plot
+  - Classification: ROC & PR curves
+  - Binary: Confusion matrix
+
+- 📉 **SHAP scores** saved to `output/shap/`
+- 📦 **Trained models** saved to `output/models/`
+
+---
+
+## 🧠 Interpretation Tools
+
+- **SHAP**: Global and local token importance
+- **Captum LIG**: Gradient-based token attribution at the embedding level
+
+---
+
+## 🧠 Acknowledgements
+
+- 🤗 Hugging Face Transformers
+- 🧬 PoetschLab/GROVER
+- 📉 PEFT/LoRA 
+- 🧠 SHAP & Captum for interpretability
+- 🧬 `crested` for efficient sequence extraction
+
+---

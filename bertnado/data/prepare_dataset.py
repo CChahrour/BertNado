@@ -1,4 +1,6 @@
 import argparse
+import json
+import os
 import warnings
 
 import pandas as pd
@@ -19,7 +21,7 @@ def tokenize_dataset(dataset, tokenizer_name):
     return dataset.map(tokenize_function, batched=True)
 
 
-def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_dir):
+def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_dir, task_type):
     """Load and split the dataset into training, validation, and test sets based on chromosome, fetch sequences, and convert to Hugging Face Dataset."""
     data = pd.read_parquet(file_path)
     data["region"] = data.index
@@ -30,7 +32,28 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
     data = data[
         ["chromosome", "start", "end", target_column]
     ]  # Ensure necessary columns are included
-    data = data.rename(columns={target_column: "labels"})
+
+    if task_type in ["binary_classification", "multilabel_classification"]:
+        # Binarize labels with a threshold of >0
+        data[target_column] = (data[target_column] > 0).astype(int)
+
+        # Balance class weights
+        class_counts = data[target_column].value_counts()
+        class_weights = {cls: 1.0 / count for cls, count in class_counts.items()}
+        print(f"Class weights: {class_weights}")
+        # Save class weights to a JSON file
+        class_weights_path = os.path.join(output_dir, "class_weights.json")
+        with open(class_weights_path, "w") as class_weights_file:
+            json.dump(class_weights, class_weights_file, indent=2)
+        print(f"Class weights saved to {class_weights_path}")
+    if task_type in ["binary_classification", "regression"]:
+        data = data.rename(columns={target_column: "labels"})
+    elif task_type == "multilabel_classification":
+        # Convert to multi-label format
+        data = data.rename(columns={target_column: "labels"})
+        data["labels"] = data["labels"].apply(lambda x: [int(i) for i in str(x).split(",")])
+    else:
+        raise ValueError(f"Unsupported task type: {task_type}")
 
     # Split data by chromosome
     test = data[data["chromosome"] == "chr9"]
@@ -66,21 +89,23 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
 
 
 class DatasetPreparer:
-    def __init__(self, file_path, target_column, fasta_file, tokenizer_name, output_dir):
+    def __init__(self, file_path, target_column, fasta_file, tokenizer_name, output_dir, task_type):
         self.file_path = file_path
         self.target_column = target_column
         self.fasta_file = fasta_file
         self.tokenizer_name = tokenizer_name
         self.output_dir = output_dir
+        self.task_type = task_type
 
     def prepare(self):
         """Prepare the dataset for training."""
-        prepare_data(
+        return prepare_data(
             self.file_path,
             self.target_column,
             self.fasta_file,
             self.tokenizer_name,
             self.output_dir,
+            self.task_type,
         )
 
 
@@ -111,6 +136,13 @@ if __name__ == "__main__":
         default="PoetschLab/GROVER",
         help="Name of the tokenizer to use.",
     )
+    parser.add_argument(
+        "--task_type",
+        type=str,
+        required=True,
+        choices=["binary_classification", "multilabel_classification", "regression"],
+        help="Type of task to evaluate.",
+    )
 
     args = parser.parse_args()
 
@@ -120,5 +152,6 @@ if __name__ == "__main__":
         args.fasta_file,
         args.tokenizer_name,
         args.output_dir,
+        args.task_type,
     )
     preparer.prepare()

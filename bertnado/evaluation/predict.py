@@ -14,7 +14,7 @@ def predict_and_evaluate(tokenizer_name, model_path, dataset, output_dir, task_t
 
     # Load model and tokenizer
     print(f"Model loading from {model_path}")
-    model = AutoModelForSequenceClassification.from_pretrained(model_path, local_files_only=True)
+    model = AutoModelForSequenceClassification.from_pretrained(model_path, local_files_only=True, trust_remote_code=True)
     print(f"Model loaded from {model_path}")
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
     print(f"Tokenizer loaded from {tokenizer_name}")

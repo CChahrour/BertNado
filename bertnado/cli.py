@@ -43,12 +43,23 @@ def cli():
     type=click.Path(),
     help="Directory to save the output dataset.",
 )
-def prepare_data_cli(file_path, target_column, fasta_file, tokenizer_name, output_dir):
+@click.option(
+    "--task-type",
+    required=True,
+    type=click.Choice(
+        ["binary_classification", "multilabel_classification", "regression"]
+    ),
+    help="Task type.",
+)
+def prepare_data_cli(file_path, target_column, fasta_file, tokenizer_name, output_dir, task_type):
     """Prepare the dataset for training."""
     preparer = DatasetPreparer(
-        file_path, target_column, fasta_file, tokenizer_name, output_dir
+        file_path, target_column, fasta_file, tokenizer_name, output_dir, task_type
     )
-    preparer.prepare()
+    dataset = preparer.prepare()
+    return dataset
+    print(f"Dataset prepared and saved to {output_dir}")
+
 
 
 @cli.command()
@@ -210,6 +221,12 @@ def predict_and_evaluate_cli(tokenizer_name, model_dir, dataset_dir, output_dir,
 
 @cli.command()
 @click.option(
+    "--tokenizer-name",
+    default="PoetschLab/GROVER",
+    type=str,
+    help="Name of the tokenizer to use.",
+)
+@click.option(
     "--model-dir",
     required=True,
     type=click.Path(),
@@ -238,15 +255,16 @@ def predict_and_evaluate_cli(tokenizer_name, model_dir, dataset_dir, output_dir,
     type=click.Choice(["shap", "lig", "both"]),
     help="Analysis method: SHAP, LIG, or both.",
 )
-def feature_analysis_cli(model_dir, dataset_dir, output_dir, task_type, method):
+def feature_analysis_cli(tokenizer_name, model_dir, dataset_dir, output_dir, task_type, method):
     """Perform feature analysis using SHAP, LIG, or both."""
-    attributer = Attributer(model_dir, dataset_dir, output_dir, task_type)
+    attributer = Attributer(tokenizer_name, model_dir, dataset_dir, output_dir, task_type)
 
     if method == "shap" or method == "both":
-        attributer.extract()
+        attributer.extract_shap_features()
 
     if method == "lig" or method == "both":
         attributer.extract_lig()
+        attributer.visualize_lig()
 
 
 if __name__ == "__main__":

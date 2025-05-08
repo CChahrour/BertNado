@@ -23,6 +23,8 @@ def test_prepare_data_cli(runner):
             "PoetschLab/GROVER",
             "--output-dir",
             "test/mock/dataset",
+            "--task-type",
+            "regression",
         ],
     )
     assert result.exit_code == 0
@@ -78,9 +80,9 @@ def test_predict_and_evaluate_cli(runner):
     result = runner.invoke(
         cli,
         [
+            "predict_and_evaluate_cli",
             "--tokenizer-name",
             "PoetschLab/GROVER",
-            "predict_and_evaluate_cli",
             "--model-dir",
             "test/mock/train/model",
             "--dataset-dir",
@@ -99,6 +101,8 @@ def test_feature_analysis_cli(runner):
         cli,
         [
             "feature_analysis_cli",
+            "--tokenizer-name",
+            "PoetschLab/GROVER",
             "--model-dir",
             "test/mock/train/model",
             "--dataset-dir",

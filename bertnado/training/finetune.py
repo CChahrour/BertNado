@@ -93,6 +93,10 @@ class FineTuner:
 
         # Train the model
         trainer.train()
+        
+        if self.job_type == "full_train":
+            trainer.save_model(f"{self.output_dir}/model")
+
         wandb.finish()
 
 
