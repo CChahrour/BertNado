@@ -1,27 +1,29 @@
 import pytest
 from unittest.mock import patch
-from bertnado.training.sweep import run_sweep
+from bertnado.training.sweep import Sweeper
 
-@patch("bertnado.training.sweep.json.load")
-@patch("bertnado.training.sweep.open", create=True)
-def test_run_sweep(mock_open, mock_json_load):
-    # Mock the behavior of json.load
+@patch("bertnado.training.sweep.wandb.sweep")
+@patch("bertnado.training.sweep.wandb.agent")
+@patch("builtins.open", create=True)
+@patch("json.load")
+def test_sweeper(mock_json_load, mock_open, mock_agent, mock_sweep):
+    # Mock configuration
     mock_json_load.return_value = {}
 
-    # Mock inputs
-    config_path = "mock_config.json"
-    output_dir = "mock_output_dir"
-    model_name = "mock_model"
-    dataset = "mock_dataset"
-    sweep_count = 5
-    project_name = "mock_project"
-    task_type = "regression"
+    # Initialize Sweeper
+    sweeper = Sweeper(
+        config_path="mock_config.json",
+        output_dir="mock_output_dir",
+        model_name="mock_model",
+        dataset="mock_dataset",
+        task_type="regression",
+        project_name="mock_project",
+    )
 
-    # Call the function
-    try:
-        run_sweep(config_path, output_dir, model_name, dataset, sweep_count, project_name, task_type)
-    except Exception as e:
-        pytest.fail(f"run_sweep raised an exception: {e}")
+    # Run the sweep
+    sweeper.run(sweep_count=5)
 
-    # Assert that open was called
-    mock_open.assert_called_with(config_path, "r")
+    # Assertions
+    mock_open.assert_called_once_with("mock_config.json", "r")
+    mock_sweep.assert_called_once()
+    mock_agent.assert_called_once()

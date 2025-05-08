@@ -1,9 +1,9 @@
 import click
 from bertnado.data.prepare_dataset import DatasetPreparer
 from bertnado.training.sweep import Sweeper
-from bertnado.training.trainers import Trainer
+from bertnado.training.trainers import GeneralizedTrainer as Trainer
 from bertnado.evaluation.predict import Evaluator
-from bertnado.evaluation.feature_extraction import Extractor
+from bertnado.evaluation.feature_extraction import Attributer
 
 
 @click.group()
@@ -166,8 +166,8 @@ def predict_and_evaluate_cli(model_dir, dataset_dir, output_dir, task_type):
 )
 def shap_analysis_cli(model_dir, dataset_dir, output_dir, task_type):
     """Perform SHAP analysis."""
-    extractor = Extractor(model_dir, dataset_dir, output_dir, task_type)
-    extractor.extract()
+    attributer = Attributer(model_dir, dataset_dir, output_dir, task_type)
+    attributer.extract()
 
 
 @cli.command()
@@ -202,13 +202,13 @@ def shap_analysis_cli(model_dir, dataset_dir, output_dir, task_type):
 )
 def feature_analysis_cli(model_dir, dataset_dir, output_dir, task_type, method):
     """Perform feature analysis using SHAP, LIG, or both."""
-    extractor = Extractor(model_dir, dataset_dir, output_dir, task_type)
+    attributer = Attributer(model_dir, dataset_dir, output_dir, task_type)
 
     if method == "shap" or method == "both":
-        extractor.extract()
+        attributer.extract()
 
     if method == "lig" or method == "both":
-        extractor.extract_lig()
+        attributer.extract_lig()
 
 
 if __name__ == "__main__":

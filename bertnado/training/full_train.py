@@ -161,25 +161,3 @@ if __name__ == "__main__":
         args.project_name,
         args.pos_weight,
     )
-
-
-class Trainer:
-    def __init__(self, model_name, dataset, output_dir, task_type, project_name):
-        self.model_name = model_name
-        self.dataset = dataset
-        self.output_dir = output_dir
-        self.task_type = task_type
-        self.project_name = project_name
-
-    def train(self, best_config_path):
-        """Perform full training using the best configuration."""
-        from bertnado.training.full_train import full_train
-
-        full_train(
-            self.output_dir,
-            self.model_name,
-            self.dataset,
-            best_config_path,
-            self.task_type,
-            self.project_name,
-        )
