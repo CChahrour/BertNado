@@ -4,7 +4,7 @@ __pycache__/
 .pytest_cache/
 bertnado.egg-info
 bertnado/_version.py
-
+wandb/
 # Ignore macOS system files
 .DS_Store
 

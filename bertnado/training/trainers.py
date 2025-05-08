@@ -19,7 +19,8 @@ class GeneralizedTrainer(HFTrainer):
         labels = labels.to(logits.device).float()
 
         if self.task_type == "binary_classification":
-            logits = logits.squeeze(-1)  # Ensure logits are 1D
+            if logits.ndim > 1 and logits.size(-1) == 1:
+                logits = logits.squeeze(-1)  # Ensure logits are 1D for binary classification
             loss_fct = BCEWithLogitsLoss(
                 pos_weight=self.pos_weight.to(logits.device)
                 if self.pos_weight is not None

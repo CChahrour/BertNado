@@ -27,7 +27,7 @@ def cli():
     help="Path to the genome FASTA file.",
 )
 @click.option(
-    "--tokenizer-name", required=True, type=str, help="Name of the tokenizer to use."
+    "--tokenizer-name", required=True, type=str, default="PoetschLab/GROVER", help="Name of the tokenizer to use."
 )
 @click.option(
     "--output-dir",

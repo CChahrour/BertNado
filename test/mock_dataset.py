@@ -8,7 +8,7 @@ def create_mock_dataset(output_path):
     # Ensure at least 10 examples for chr8 and chr9 with balanced labels
     eval_data = {
         "chromosome": ["chr8"] * 10,
-        "start": [random.randint(1, 1_000_000) for _ in range(10)],
+        "start": [random.randint(1, 4000) for _ in range(10)],
         "test_A": [random.random() for _ in range(10)],
         "test_B": [random.random() for _ in range(10)],
     }
@@ -16,7 +16,7 @@ def create_mock_dataset(output_path):
 
     test_data = {
         "chromosome": ["chr9"] * 10,
-        "start": [random.randint(1, 1_000_000) for _ in range(10)],
+        "start": [random.randint(1, 4000) for _ in range(10)],
         "test_A": [random.random() for _ in range(10)],
         "test_B": [random.random() for _ in range(10)],
     }
@@ -25,7 +25,7 @@ def create_mock_dataset(output_path):
     # Generate additional random data for chromosomes 1-7
     train_data = {
         "chromosome": [random.choice([f"chr{i}" for i in range(1, 8)]) for _ in range(80)],
-        "start": [random.randint(1, 1_000_000) for _ in range(80)],
+        "start": [random.randint(1, 4000) for _ in range(80)],
         "test_A": [random.random() for _ in range(80)],
         "test_B": [random.random() for _ in range(80)],
     }
