@@ -47,4 +47,4 @@ def create_mock_dataset(output_path):
     df.to_parquet(output_path, index=True)
 
 if __name__ == "__main__":
-    create_mock_dataset("test/mock_data.parquet")
+    create_mock_dataset("test/data/mock_data.parquet")

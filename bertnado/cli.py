@@ -1,7 +1,7 @@
 import click
 from bertnado.data.prepare_dataset import DatasetPreparer
 from bertnado.training.sweep import Sweeper
-from bertnado.training.trainers import GeneralizedTrainer as Trainer
+from bertnado.training.full_train import FullTrainer
 from bertnado.evaluation.predict import Evaluator
 from bertnado.evaluation.feature_extraction import Attributer
 
@@ -106,7 +106,7 @@ def run_sweep_cli(config_path, output_dir, model_name, dataset, sweep_count, pro
 @click.option("--project-name", required=True, type=str, help="WandB project name.")
 def full_train_cli(output_dir, model_name, dataset, best_config_path, task_type, project_name):
     """Perform full training."""
-    trainer = Trainer(model_name, dataset, output_dir, task_type, project_name)
+    trainer = FullTrainer(model_name, dataset, output_dir, task_type, project_name)
     trainer.train(best_config_path)
 
 

@@ -11,85 +11,92 @@ from bertnado.training.metrics import (
 )
 
 
-def fine_tune_model(
-    output_dir, model_name, dataset, config, task_type, project_name, pos_weight=None
-):
-    """Fine-tune the model using Hugging Face Trainer."""
-    os.environ["TOKENIZERS_PARALLELISM"] = "false"
-    wandb.init(
-        project=project_name,
-        group=task_type,
-        job_type="finetune",
-        dir=f"{output_dir}/wandb",
-        name=f"run_{datetime.now().strftime('%Y-%m-%d_%H%M')}",
-    )
+class FineTuner:
+    def __init__(self, model_name, dataset, output_dir, task_type, project_name, pos_weight=None):
+        self.model_name = model_name
+        self.dataset = dataset
+        self.output_dir = output_dir
+        self.task_type = task_type
+        self.project_name = project_name
+        self.pos_weight = pos_weight
 
-    # Load datasets
-    dataset = load_from_disk(dataset)
-    train_dataset = dataset["train"]
-    eval_dataset = dataset["validation"]
+    def fine_tune(self, config):
+        """Fine-tune the model using the provided configuration."""
+        os.environ["TOKENIZERS_PARALLELISM"] = "false"
+        wandb.init(
+            project=self.project_name,
+            group=self.task_type,
+            job_type="finetune",
+            dir=f"{self.output_dir}/wandb",
+            name=f"run_{datetime.now().strftime('%Y-%m-%d_%H%M')}",
+        )
 
-    # Determine number of labels based on task type
-    if task_type == "binary_classification":
-        num_labels = 1
-    elif task_type == "multilabel_classification":
-        num_labels = train_dataset.features["labels"].feature.num_classes
-    elif task_type == "regression":
-        num_labels = 1
-    else:
-        raise ValueError(f"Unsupported task type: {task_type}")
+        # Load datasets
+        dataset = load_from_disk(self.dataset)
+        train_dataset = dataset["train"]
+        eval_dataset = dataset["validation"]
 
-    # Load model
-    model = AutoModelForSequenceClassification.from_pretrained(
-        model_name, num_labels=num_labels
-    )
+        # Determine number of labels based on task type
+        if self.task_type == "binary_classification":
+            num_labels = 1
+        elif self.task_type == "multilabel_classification":
+            num_labels = train_dataset.features["labels"].feature.num_classes
+        elif self.task_type == "regression":
+            num_labels = 1
+        else:
+            raise ValueError(f"Unsupported task type: {self.task_type}")
 
-    # Define training arguments
-    training_args = TrainingArguments(
-        output_dir=output_dir,
-        eval_strategy="epoch",
-        learning_rate=config.get("learning_rate", 5e-5),
-        per_device_train_batch_size=config.get("per_device_train_batch_size", 16),
-        per_device_eval_batch_size=config.get("per_device_eval_batch_size", 16),
-        num_train_epochs=config.get("epochs", 3),
-        weight_decay=config.get("weight_decay", 0.01),
-        logging_dir=f"{output_dir}/logs",
-        logging_steps=config.get("logging_steps", 10),
-        save_strategy="epoch",
-        save_total_limit=2,
-        load_best_model_at_end=True,
-        report_to="wandb",
-        max_steps=config.get("max_steps", -1),
-    )
+        # Load model
+        model = AutoModelForSequenceClassification.from_pretrained(
+            self.model_name, num_labels=num_labels
+        )
 
-    # Select the appropriate metrics function based on task type
-    if task_type == "binary_classification":
-        compute_metrics = binary_classification_metrics
-    elif task_type == "multilabel_classification":
-        compute_metrics = multi_label_classification_metrics
-    elif task_type == "regression":
-        compute_metrics = compute_metrics_regression
-    else:
-        raise ValueError(f"Unsupported task type: {task_type}")
+        # Define training arguments
+        training_args = TrainingArguments(
+            output_dir=self.output_dir,
+            eval_strategy="epoch",
+            learning_rate=config.get("learning_rate", 5e-5),
+            per_device_train_batch_size=config.get("per_device_train_batch_size", 16),
+            per_device_eval_batch_size=config.get("per_device_eval_batch_size", 16),
+            num_train_epochs=config.get("epochs", 3),
+            weight_decay=config.get("weight_decay", 0.01),
+            logging_dir=f"{self.output_dir}/logs",
+            logging_steps=config.get("logging_steps", 10),
+            save_strategy="epoch",
+            save_total_limit=2,
+            load_best_model_at_end=True,
+            report_to="wandb",
+            max_steps=config.get("max_steps", -1),
+        )
 
-    # Define Trainer
-    trainer = GeneralizedTrainer(
-        model=model,
-        args=training_args,
-        train_dataset=train_dataset,
-        eval_dataset=eval_dataset,
-        task_type=task_type,
-        pos_weight=pos_weight,
-        compute_metrics=compute_metrics,
-    )
+        # Select the appropriate metrics function based on task type
+        if self.task_type == "binary_classification":
+            compute_metrics = binary_classification_metrics
+        elif self.task_type == "multilabel_classification":
+            compute_metrics = multi_label_classification_metrics
+        elif self.task_type == "regression":
+            compute_metrics = compute_metrics_regression
+        else:
+            raise ValueError(f"Unsupported task type: {self.task_type}")
 
-    # Train the model
-    trainer.train()
+        # Define Trainer
+        trainer = GeneralizedTrainer(
+            model=model,
+            args=training_args,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            task_type=self.task_type,
+            pos_weight=self.pos_weight,
+            compute_metrics=compute_metrics,
+        )
 
-    # Save the model
-    trainer.save_model(output_dir)
+        # Train the model
+        trainer.train()
 
-    wandb.finish()
+        # Save the model
+        trainer.save_model(self.output_dir)
+
+        wandb.finish()
 
 
 if __name__ == "__main__":
@@ -139,11 +146,13 @@ if __name__ == "__main__":
     with open(args.config, "r") as f:
         config = json.load(f)
 
-    fine_tune_model(
-        args.output_dir,
-        args.model_name,
-        args.dataset,
-        config,
-        args.task_type,
-        args.pos_weight,
+    fine_tuner = FineTuner(
+        model_name=args.model_name,
+        dataset=args.dataset,
+        output_dir=args.output_dir,
+        task_type=args.task_type,
+        project_name="FineTuningProject",
+        pos_weight=args.pos_weight,
     )
+
+    fine_tuner.fine_tune(config)

@@ -10,6 +10,7 @@ from bertnado.training.metrics import (
     binary_classification_metrics,
     multi_label_classification_metrics,
 )
+from .finetune import FineTuner
 
 
 def full_train(
@@ -102,6 +103,30 @@ def full_train(
     wandb.finish()
 
 
+class FullTrainer:
+    def __init__(self, model_name, dataset, output_dir, task_type, project_name, pos_weight=None):
+        self.model_name = model_name
+        self.dataset = dataset
+        self.output_dir = output_dir
+        self.task_type = task_type
+        self.project_name = project_name
+        self.pos_weight = pos_weight
+
+    def train(self, best_config_path):
+        with open(best_config_path, "r") as config_file:
+            config = json.load(config_file)
+
+        fine_tuner = FineTuner(
+            model_name=self.model_name,
+            dataset=self.dataset,
+            output_dir=self.output_dir,
+            task_type=self.task_type,
+            project_name=self.project_name,
+            pos_weight=self.pos_weight,
+        )
+        fine_tuner.fine_tune(config)
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -152,12 +177,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    full_train(
-        args.output_dir,
-        args.model_name,
-        args.dataset,
-        args.best_config_path,
-        args.task_type,
-        args.project_name,
-        args.pos_weight,
+    trainer = FullTrainer(
+        model_name=args.model_name,
+        dataset=args.dataset,
+        output_dir=args.output_dir,
+        task_type=args.task_type,
+        project_name=args.project_name,
+        pos_weight=args.pos_weight,
     )
+    trainer.train(args.best_config_path)

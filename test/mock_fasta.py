@@ -1,3 +1,4 @@
+import os
 import random
 
 def create_mock_fasta(output_path, num_sequences=10, sequence_length=5000):
@@ -9,4 +10,6 @@ def create_mock_fasta(output_path, num_sequences=10, sequence_length=5000):
             fasta_file.write(f"{header}\n{sequence}\n")
 
 if __name__ == "__main__":
-    create_mock_fasta("test/mock_genome.fasta")
+    create_mock_fasta("test/data/mock_genome.fasta")
+    # index the FASTA file
+    os.system("samtools faidx test/data/mock_genome.fasta")

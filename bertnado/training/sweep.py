@@ -1,7 +1,8 @@
 import json
 import os
-import wandb
-from bertnado.training.full_train import full_train
+import random
+import math
+from .finetune import FineTuner
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -16,31 +17,43 @@ class Sweeper:
         self.project_name = project_name
 
     def run(self, sweep_count):
-        """Run hyperparameter tuning using WandB sweeps."""
-        # Load sweep configuration
         with open(self.config_path, "r") as config_file:
             sweep_config = json.load(config_file)
 
-        # Initialize WandB sweep
-        sweep_id = wandb.sweep(sweep_config, project=self.project_name)
-
-        def train_fn():
-            wandb.init()
-            config = wandb.config
-
-            # Call full_train with the current sweep configuration
-            full_train(
-                self.output_dir,
-                self.model_name,
-                self.dataset,
-                config.best_config_path,
-                self.task_type,
-                self.project_name,
-                config.get("pos_weight", None),
+        for i in range(sweep_count):
+            config = self._generate_config(sweep_config)
+            fine_tuner = FineTuner(
+                model_name=self.model_name,
+                dataset=self.dataset,
+                output_dir=f"{self.output_dir}/sweep_{i}",
+                task_type=self.task_type,
+                project_name=self.project_name,
             )
+            fine_tuner.fine_tune(config)
 
-        # Run the sweep
-        wandb.agent(sweep_id, function=train_fn, count=sweep_count)
+    def _generate_config(self, sweep_config):
+        """Generate a configuration for a single sweep run."""
+        parameters = sweep_config.get("parameters", {})
+        config = {}
+        for key, value in parameters.items():
+            if "value" in value:
+                config[key] = value["value"]
+            elif "values" in value:
+                config[key] = random.choice(value["values"])
+            elif "distribution" in value:
+                if value["distribution"] == "uniform":
+                    config[key] = random.uniform(value["min"], value["max"])
+                elif value["distribution"] == "int_uniform":
+                    config[key] = random.randint(value["min"], value["max"])
+                elif value["distribution"] == "log_uniform_values":
+                    config[key] = 10 ** random.uniform(
+                        math.log10(value["min"]), math.log10(value["max"])
+                    )
+                else:
+                    raise ValueError(f"Unsupported distribution: {value['distribution']}")
+            else:
+                raise ValueError(f"Invalid parameter configuration: {value}")
+        return config
 
 
 if __name__ == "__main__":
