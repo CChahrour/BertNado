@@ -8,19 +8,18 @@ Built for **regression**, **binary**, and **multi-label classification** tasks w
 ## 🧬 Features
 
 - ✅ Support for **regression**, **binary**, and **multi-label classification**
-- ⚡ Efficient fine-tuning using **LoRA (Low-Rank Adaptation)**
-- 🧠 Model interpretation via **SHAP** and **Captum (LIG)**
-- 📊 Evaluation plots: **R²**, **ROC**, **PR**, **confusion matrix**
 - 🧪 Chromosome-aware train/val/test split
+- ⚡ Efficient fine-tuning using **LoRA (Low-Rank Adaptation)**
 - 🎯 Hyperparameter optimization via **Bayesian W&B sweeps**
-- 🧱 Clean CLI interface for training, predicting, and interpreting
+- 📊 Evaluation plots: **R²**, **ROC**, **PR**, **confusion matrix**
+- 🧠 Model interpretation via **SHAP** and **Captum Layer Integrated Gradients(LIG)**
 
 ---
 
 ## 📦 Installation
 
 ```bash
-git clone https://github.com/yourusername/bertnado.git
+git clone https://github.com/CChahrour/bertnado.git
 cd bertnado
 pip install -e .
 ```
