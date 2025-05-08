@@ -170,5 +170,46 @@ def shap_analysis_cli(model_dir, dataset_dir, output_dir, task_type):
     extractor.extract()
 
 
+@cli.command()
+@click.option(
+    "--model-dir",
+    required=True,
+    type=click.Path(),
+    help="Path to the fine-tuned model.",
+)
+@click.option(
+    "--dataset-dir", required=True, type=click.Path(), help="Path to the test dataset."
+)
+@click.option(
+    "--output-dir",
+    required=True,
+    type=click.Path(),
+    help="Directory to save the analysis results.",
+)
+@click.option(
+    "--task-type",
+    required=True,
+    type=click.Choice(
+        ["binary_classification", "multilabel_classification", "regression"]
+    ),
+    help="Task type.",
+)
+@click.option(
+    "--method",
+    required=True,
+    type=click.Choice(["shap", "lig", "both"]),
+    help="Analysis method: SHAP, LIG, or both.",
+)
+def feature_analysis_cli(model_dir, dataset_dir, output_dir, task_type, method):
+    """Perform feature analysis using SHAP, LIG, or both."""
+    extractor = Extractor(model_dir, dataset_dir, output_dir, task_type)
+
+    if method == "shap" or method == "both":
+        extractor.extract()
+
+    if method == "lig" or method == "both":
+        extractor.extract_lig()
+
+
 if __name__ == "__main__":
     cli()

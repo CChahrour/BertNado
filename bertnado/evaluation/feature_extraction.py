@@ -1,9 +1,12 @@
 import os
+import re
 
 import matplotlib.pyplot as plt
 import shap
 from datasets import load_from_disk
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from captum.attr import LayerIntegratedGradients
+import numpy as np
 
 
 def extract_shap_features(model_path, test_path, output_dir):
@@ -37,7 +40,7 @@ def extract_shap_features(model_path, test_path, output_dir):
     shap.save(f"{output_dir}/shap/shap_values.pkl", shap_values)
 
 
-class Extractor:
+class Attributer:
     def __init__(self, model_dir, dataset_dir, output_dir, task_type):
         self.model_dir = model_dir
         self.dataset_dir = dataset_dir
@@ -51,6 +54,106 @@ class Extractor:
             self.dataset_dir,
             self.output_dir,
         )
+
+    def extract_lig(self):
+        """Perform Layer Integrated Gradients (LIG) analysis."""
+        # Load model and tokenizer
+        model = AutoModelForSequenceClassification.from_pretrained(self.model_dir)
+        tokenizer = AutoTokenizer.from_pretrained(self.model_dir)
+
+        # Load test dataset
+        test_dataset = load_from_disk(self.dataset_dir)
+
+        # Prepare data for LIG
+        def tokenize_function(examples):
+            return tokenizer(
+                examples["sequence"], return_tensors="pt", padding=True, truncation=True
+            )
+
+        tokenized_data = [tokenize_function(example) for example in test_dataset]
+
+        # Perform LIG analysis
+        lig = LayerIntegratedGradients(model, model.base_model.embeddings)
+        attributions = []
+        for inputs in tokenized_data:
+            input_ids = inputs["input_ids"]
+            attention_mask = inputs["attention_mask"]
+            attribution = lig.attribute(
+                input_ids, additional_forward_args=(attention_mask,), target=0
+            )
+            attributions.append(attribution)
+
+        # Save LIG results
+        os.makedirs(f"{self.output_dir}/lig", exist_ok=True)
+        with open(f"{self.output_dir}/lig/lig_attributions.pkl", "wb") as f:
+            import pickle
+            pickle.dump(attributions, f)
+
+    def visualize_lig(self):
+        """Visualize Layer Integrated Gradients (LIG) attributions."""
+        lig_path = f"{self.output_dir}/lig/lig_attributions.pkl"
+
+        # Load LIG attributions
+        with open(lig_path, "rb") as f:
+            import pickle
+            attributions = pickle.load(f)
+
+        # Aggregate attributions for visualization
+        aggregated_attributions = [np.sum(attr.numpy(), axis=1) for attr in attributions]
+
+        # Plot aggregated attributions
+        plt.figure(figsize=(10, 6))
+        for i, attr in enumerate(aggregated_attributions[:5]):  # Visualize first 5 examples
+            plt.plot(attr, label=f"Example {i+1}")
+
+        plt.title("Layer Integrated Gradients (LIG) Attributions")
+        plt.xlabel("Token Index")
+        plt.ylabel("Attribution Value")
+        plt.legend()
+        plt.grid(True)
+
+        # Save the visualization
+        os.makedirs(f"{self.output_dir}/lig/figures", exist_ok=True)
+        plt.savefig(f"{self.output_dir}/lig/figures/lig_visualization.png")
+        plt.close()
+
+    def match_motifs(self, motifs):
+        """Match motifs in tokenized sequences based on attributions.
+
+        Args:
+            motifs (list of str): List of motifs (regex patterns) to match.
+
+        Returns:
+            dict: A dictionary where keys are motif patterns and values are lists of matching token indices.
+        """
+        lig_path = f"{self.output_dir}/lig/lig_attributions.pkl"
+
+        # Load LIG attributions
+        with open(lig_path, "rb") as f:
+            import pickle
+            attributions = pickle.load(f)
+
+        # Load test dataset
+        test_dataset = load_from_disk(self.dataset_dir)
+
+        # Prepare data for motif matching
+        tokenizer = AutoTokenizer.from_pretrained(self.model_dir)
+        tokenized_sequences = [
+            tokenizer(example["sequence"], return_tensors="pt", padding=True, truncation=True)["input_ids"]
+            for example in test_dataset
+        ]
+
+        # Match motifs
+        motif_matches = {motif: [] for motif in motifs}
+        for i, tokens in enumerate(tokenized_sequences):
+            token_strings = tokenizer.convert_ids_to_tokens(tokens[0])
+            for motif in motifs:
+                pattern = re.compile(motif)
+                for j, token in enumerate(token_strings):
+                    if pattern.match(token):
+                        motif_matches[motif].append((i, j))
+
+        return motif_matches
 
 
 if __name__ == "__main__":
@@ -71,5 +174,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    extractor = Extractor(args.model_path, args.test_path, args.output_dir, task_type=None)
-    extractor.extract()
+    attributer = Attributer(args.model_path, args.test_path, args.output_dir, task_type=None)
+    attributer.extract()
