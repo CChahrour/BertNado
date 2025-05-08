@@ -6,7 +6,10 @@ from bertnado.training.finetune import fine_tune_model
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-def run_sweep(config_path, output_dir, model_name, dataset, sweep_count, project_name, task_type):
+
+def run_sweep(
+    config_path, output_dir, model_name, dataset, sweep_count, project_name, task_type
+):
     """Run hyperparameter sweep using wandb."""
     with open(config_path, "r") as f:
         sweep_config = json.load(f)
@@ -26,7 +29,7 @@ def run_sweep(config_path, output_dir, model_name, dataset, sweep_count, project
                 group=task_type,
                 job_type="sweep",
                 dir=f"{output_dir}/wandb",
-                name=f"run_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
+                name=f"run_{datetime.now().strftime('%Y-%m-%d_%H%M')}",
             )
         config = wandb.config
         fine_tune_model(

@@ -90,4 +90,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    predict_and_evaluate(args.model_path, args.test_path, args.output_dir, args.task_type)
+    predict_and_evaluate(
+        args.model_path, args.test_path, args.output_dir, args.task_type
+    )

@@ -11,7 +11,16 @@ from bertnado.training.metrics import (
     multi_label_classification_metrics,
 )
 
-def full_train(output_dir, model_name, dataset, best_config_path, task_type, project_name, pos_weight=None):
+
+def full_train(
+    output_dir,
+    model_name,
+    dataset,
+    best_config_path,
+    task_type,
+    project_name,
+    pos_weight=None,
+):
     """Perform a full fine-tune using the best configuration from the sweep."""
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
     wandb.init(
@@ -19,7 +28,7 @@ def full_train(output_dir, model_name, dataset, best_config_path, task_type, pro
         group=task_type,
         job_type="full_train",
         dir=f"{output_dir}/wandb",
-        name=f"full_train_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
+        name=f"full_train_{datetime.now().strftime('%Y-%m-%d_%H%M')}",
     )
 
     # Load the best configuration
@@ -92,10 +101,13 @@ def full_train(output_dir, model_name, dataset, best_config_path, task_type, pro
 
     wandb.finish()
 
+
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Perform a full fine-tune using the best configuration from the sweep.")
+    parser = argparse.ArgumentParser(
+        description="Perform a full fine-tune using the best configuration from the sweep."
+    )
     parser.add_argument(
         "--output_dir",
         type=str,

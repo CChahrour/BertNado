@@ -2,8 +2,11 @@ from torch.nn.modules.loss import BCEWithLogitsLoss, MSELoss
 from transformers.trainer import Trainer
 from .metrics import compute_metrics_regression
 
+
 class GeneralizedTrainer(Trainer):
-    def __init__(self, *args, task_type="binary_classification", pos_weight=None, **kwargs):
+    def __init__(
+        self, *args, task_type="binary_classification", pos_weight=None, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.task_type = task_type
         self.pos_weight = pos_weight
@@ -17,10 +20,18 @@ class GeneralizedTrainer(Trainer):
 
         if self.task_type == "binary_classification":
             logits = logits.squeeze(-1)  # Ensure logits are 1D
-            loss_fct = BCEWithLogitsLoss(pos_weight=self.pos_weight.to(logits.device) if self.pos_weight is not None else None)
+            loss_fct = BCEWithLogitsLoss(
+                pos_weight=self.pos_weight.to(logits.device)
+                if self.pos_weight is not None
+                else None
+            )
             loss = loss_fct(logits, labels)
         elif self.task_type == "multilabel_classification":
-            loss_fct = BCEWithLogitsLoss(pos_weight=self.pos_weight.to(logits.device) if self.pos_weight is not None else None)
+            loss_fct = BCEWithLogitsLoss(
+                pos_weight=self.pos_weight.to(logits.device)
+                if self.pos_weight is not None
+                else None
+            )
             loss = loss_fct(logits, labels)
         elif self.task_type == "regression":
             loss_fct = MSELoss()

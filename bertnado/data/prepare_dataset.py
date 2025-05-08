@@ -8,6 +8,7 @@ from transformers import AutoTokenizer
 
 warnings.filterwarnings("ignore")
 
+
 def tokenize_dataset(dataset, tokenizer_name):
     """Tokenize the sequences in the dataset using a specified tokenizer."""
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
@@ -95,5 +96,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     prepare_data(
-        args.file_path, args.target_column, args.fasta_file, args.tokenizer_name, args.output_dir
+        args.file_path,
+        args.target_column,
+        args.fasta_file,
+        args.tokenizer_name,
+        args.output_dir,
     )

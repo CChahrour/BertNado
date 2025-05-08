@@ -4,13 +4,12 @@ from transformers import AutoModelForSequenceClassification
 
 
 def get_model(
-     
-    task, 
+    task,
     label2id,
-    device, 
-    dropout, 
-    lora_r, 
-    lora_alpha, 
+    device,
+    dropout,
+    lora_r,
+    lora_alpha,
     lora_dropout,
     model_parent="PoetschLab/GROVER",
 ):
@@ -60,7 +59,7 @@ def get_model(
         )
     else:
         raise ValueError(f"Unsupported task: {task}")
-    
+
     peft_config = LoraConfig(
         r=lora_r,
         lora_alpha=lora_alpha,
@@ -76,18 +75,36 @@ def get_model(
 
     return model.to(device)
 
+
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Initialize model with LoRA configuration.")
-    parser.add_argument("--model_parent", type=str, required=True, help="Parent model name or path.")
-    parser.add_argument("--task", type=str, required=True, help="Task type (e.g., 'multi_label_classification').")
-    parser.add_argument("--label2id", type=dict, required=True, help="Mapping of labels to IDs.")
-    parser.add_argument("--device", type=str, required=True, help="Device for training (e.g., 'cuda').")
-    parser.add_argument("--dropout", type=float, required=True, help="Dropout rate for the model.")
+    parser = argparse.ArgumentParser(
+        description="Initialize model with LoRA configuration."
+    )
+    parser.add_argument(
+        "--model_parent", type=str, required=True, help="Parent model name or path."
+    )
+    parser.add_argument(
+        "--task",
+        type=str,
+        required=True,
+        help="Task type (e.g., 'multi_label_classification').",
+    )
+    parser.add_argument(
+        "--label2id", type=dict, required=True, help="Mapping of labels to IDs."
+    )
+    parser.add_argument(
+        "--device", type=str, required=True, help="Device for training (e.g., 'cuda')."
+    )
+    parser.add_argument(
+        "--dropout", type=float, required=True, help="Dropout rate for the model."
+    )
     parser.add_argument("--lora_r", type=int, required=True, help="LoRA rank.")
     parser.add_argument("--lora_alpha", type=int, required=True, help="LoRA alpha.")
-    parser.add_argument("--lora_dropout", type=float, required=True, help="LoRA dropout rate.")
+    parser.add_argument(
+        "--lora_dropout", type=float, required=True, help="LoRA dropout rate."
+    )
 
     args = parser.parse_args()
 
@@ -99,5 +116,5 @@ if __name__ == "__main__":
         dropout=args.dropout,
         lora_r=args.lora_r,
         lora_alpha=args.lora_alpha,
-        lora_dropout=args.lora_dropout
+        lora_dropout=args.lora_dropout,
     )
