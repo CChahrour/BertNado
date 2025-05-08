@@ -1,4 +1,7 @@
+import datetime
 import click
+import json
+import wandb
 from bertnado.data.prepare_dataset import DatasetPreparer
 from bertnado.training.sweep import Sweeper
 from bertnado.training.full_train import FullTrainer
@@ -27,7 +30,11 @@ def cli():
     help="Path to the genome FASTA file.",
 )
 @click.option(
-    "--tokenizer-name", required=True, type=str, default="PoetschLab/GROVER", help="Name of the tokenizer to use."
+    "--tokenizer-name",
+    required=True,
+    type=str,
+    default="PoetschLab/GROVER",
+    help="Name of the tokenizer to use.",
 )
 @click.option(
     "--output-dir",
@@ -37,7 +44,9 @@ def cli():
 )
 def prepare_data_cli(file_path, target_column, fasta_file, tokenizer_name, output_dir):
     """Prepare the dataset for training."""
-    preparer = DatasetPreparer(file_path, target_column, fasta_file, tokenizer_name, output_dir)
+    preparer = DatasetPreparer(
+        file_path, target_column, fasta_file, tokenizer_name, output_dir
+    )
     preparer.prepare()
 
 
@@ -55,7 +64,10 @@ def prepare_data_cli(file_path, target_column, fasta_file, tokenizer_name, outpu
     help="Directory to save the best model.",
 )
 @click.option(
-    "--model-name", default="PoetschLab/GROVER", type=str, help="Name of the pre-trained model."
+    "--model-name",
+    default="PoetschLab/GROVER",
+    type=str,
+    help="Name of the pre-trained model.",
 )
 @click.option(
     "--dataset", required=True, type=click.Path(), help="Path to the dataset."
@@ -70,10 +82,25 @@ def prepare_data_cli(file_path, target_column, fasta_file, tokenizer_name, outpu
     ),
     help="Task type.",
 )
-def run_sweep_cli(config_path, output_dir, model_name, dataset, sweep_count, project_name, task_type):
+def run_sweep_cli(
+    config_path, output_dir, model_name, dataset, sweep_count, project_name, task_type
+):
     """Run hyperparameter sweep."""
-    sweeper = Sweeper(config_path, output_dir, model_name, dataset, task_type, project_name)
-    sweeper.run(sweep_count)
+    with open(config_path, "r") as config_file:
+        sweep_config = json.load(config_file)
+    sweep_config["name"] = f"sweep_{datetime.datetime.now().strftime('%Y-%m-%d_%H%M')}"
+    # Initialize the sweep with wandb
+    sweep_id = wandb.sweep(sweep_config, project=project_name)
+
+    # Run the sweep using wandb agent
+    for _ in range(sweep_count):
+        wandb.agent(
+            sweep_id,
+            function=lambda: Sweeper(
+                config_path, output_dir, model_name, dataset, task_type, project_name
+            ).run(1),
+            count=sweep_count,
+        )
 
 
 @cli.command()
@@ -84,7 +111,10 @@ def run_sweep_cli(config_path, output_dir, model_name, dataset, sweep_count, pro
     help="Directory to save the fine-tuned model.",
 )
 @click.option(
-    "--model-name", default="PoetschLab/GROVER", type=str, help="Name of the pre-trained model."
+    "--model-name",
+    default="PoetschLab/GROVER",
+    type=str,
+    help="Name of the pre-trained model.",
 )
 @click.option(
     "--dataset", required=True, type=click.Path(), help="Path to the dataset."
@@ -104,7 +134,9 @@ def run_sweep_cli(config_path, output_dir, model_name, dataset, sweep_count, pro
     help="Task type.",
 )
 @click.option("--project-name", required=True, type=str, help="WandB project name.")
-def full_train_cli(output_dir, model_name, dataset, best_config_path, task_type, project_name):
+def full_train_cli(
+    output_dir, model_name, dataset, best_config_path, task_type, project_name
+):
     """Perform full training."""
     trainer = FullTrainer(model_name, dataset, output_dir, task_type, project_name)
     trainer.train(best_config_path)

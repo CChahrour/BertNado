@@ -2,6 +2,7 @@ __pycache__/
 .coverage
 .ruff_cache/
 .pytest_cache/
+2025*
 bertnado.egg-info
 bertnado/_version.py
 wandb/
