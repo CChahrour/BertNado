@@ -77,7 +77,7 @@ class FineTuner:
         # Define training arguments
         training_args = TrainingArguments(
             output_dir=self.output_dir,
-            eval_strategy="epoch",
+            eval_strategy="step",
             learning_rate=config.get("learning_rate", 5e-5),
             per_device_train_batch_size=config.get("per_device_train_batch_size", 16),
             per_device_eval_batch_size=config.get("per_device_eval_batch_size", 16),
@@ -85,11 +85,11 @@ class FineTuner:
             weight_decay=config.get("weight_decay", 0.01),
             logging_dir=f"{self.output_dir}/logs",
             logging_steps=config.get("logging_steps", 10),
-            save_strategy="epoch",
+            save_strategy="step",
             save_total_limit=2,
             load_best_model_at_end=True,
             report_to="wandb",
-            max_steps=config.get("max_steps", -1),
+            max_steps=1000 if self.job_type == "sweep" else -1,
         )
 
         # Select the appropriate metrics function based on task type
