@@ -5,3 +5,26 @@ bertnado.egg-info
 .coverage
 
 run.sh
+_version.py
+
+# Ignore macOS system files
+.DS_Store
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+
+# Ignore build artifacts
+dist/
+build/
+
+# Ignore virtual environments
+venv/
+.venv/
+
+# Ignore IDE/editor files
+.vscode/
+.idea/
+
+# Ignore Sphinx build files
+docs/_build/
