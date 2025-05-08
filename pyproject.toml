@@ -43,6 +43,7 @@ bertnado-sweep = "bertnado.training.sweep:run_sweep_cli"
 bertnado-train = "bertnado.training.full_train:full_train_cli"
 bertnado-predict = "bertnado.evaluation.predict:predict_and_evaluate_cli"
 bertnado-shap = "bertnado.evaluation.feature_extraction:extract_shap_features_cli"
+bertnado-grad = "bertnado.evaluation.feature_extraction:extract_ligand_features_cli"
 
 [tool.setuptools_scm]
 write_to = "bertnado/_version.py"

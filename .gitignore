@@ -1,10 +1,8 @@
 __pycache__/
+.coverage
 .pytest_cache/
 bertnado.egg-info
-.coverage
-
-run.sh
-_version.py
+bertnado/_version.py
 
 # Ignore macOS system files
 .DS_Store

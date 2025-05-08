@@ -21,5 +21,9 @@ templates_path = ["_templates"]
 exclude_patterns = []
 
 # Options for HTML output
-html_theme = "alabaster"
+# Use the Furo theme for a modern look
+html_theme = "furo"
+
+# Add custom CSS for further styling
 html_static_path = ["_static"]
+html_css_files = ["custom.css"]
