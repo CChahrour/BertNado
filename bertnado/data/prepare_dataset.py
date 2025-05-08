@@ -65,6 +65,25 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
     dataset.save_to_disk(output_dir)
 
 
+class DatasetPreparer:
+    def __init__(self, file_path, target_column, fasta_file, tokenizer_name, output_dir):
+        self.file_path = file_path
+        self.target_column = target_column
+        self.fasta_file = fasta_file
+        self.tokenizer_name = tokenizer_name
+        self.output_dir = output_dir
+
+    def prepare(self):
+        """Prepare the dataset for training."""
+        prepare_data(
+            self.file_path,
+            self.target_column,
+            self.fasta_file,
+            self.tokenizer_name,
+            self.output_dir,
+        )
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Prepare dataset for RUNX1 regressor.")
     parser.add_argument(
@@ -95,10 +114,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    prepare_data(
+    preparer = DatasetPreparer(
         args.file_path,
         args.target_column,
         args.fasta_file,
         args.tokenizer_name,
         args.output_dir,
     )
+    preparer.prepare()

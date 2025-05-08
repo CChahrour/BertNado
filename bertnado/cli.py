@@ -1,9 +1,9 @@
 import click
-from bertnado.data.prepare_dataset import prepare_data
-from bertnado.training.sweep import run_sweep
-from bertnado.training.full_train import full_train
-from bertnado.evaluation.predict import predict_and_evaluate
-from bertnado.evaluation.feature_extraction import extract_shap_features
+from bertnado.data.prepare_dataset import DatasetPreparer
+from bertnado.training.sweep import Sweeper
+from bertnado.training.trainers import Trainer
+from bertnado.evaluation.predict import Evaluator
+from bertnado.evaluation.feature_extraction import Extractor
 
 
 @click.group()
@@ -37,7 +37,8 @@ def cli():
 )
 def prepare_data_cli(file_path, target_column, fasta_file, tokenizer_name, output_dir):
     """Prepare the dataset for training."""
-    prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_dir)
+    preparer = DatasetPreparer(file_path, target_column, fasta_file, tokenizer_name, output_dir)
+    preparer.prepare()
 
 
 @cli.command()
@@ -69,19 +70,10 @@ def prepare_data_cli(file_path, target_column, fasta_file, tokenizer_name, outpu
     ),
     help="Task type.",
 )
-def run_sweep_cli(
-    config_path, output_dir, model_name, dataset, sweep_count, project_name, task_type
-):
+def run_sweep_cli(config_path, output_dir, model_name, dataset, sweep_count, project_name, task_type):
     """Run hyperparameter sweep."""
-    run_sweep(
-        config_path,
-        output_dir,
-        model_name,
-        dataset,
-        sweep_count,
-        project_name,
-        task_type,
-    )
+    sweeper = Sweeper(config_path, output_dir, model_name, dataset, task_type, project_name)
+    sweeper.run(sweep_count)
 
 
 @cli.command()
@@ -112,13 +104,10 @@ def run_sweep_cli(
     help="Task type.",
 )
 @click.option("--project-name", required=True, type=str, help="WandB project name.")
-def full_train_cli(
-    output_dir, model_name, dataset, best_config_path, task_type, project_name
-):
+def full_train_cli(output_dir, model_name, dataset, best_config_path, task_type, project_name):
     """Perform full training."""
-    full_train(
-        output_dir, model_name, dataset, best_config_path, task_type, project_name
-    )
+    trainer = Trainer(model_name, dataset, output_dir, task_type, project_name)
+    trainer.train(best_config_path)
 
 
 @cli.command()
@@ -147,7 +136,8 @@ def full_train_cli(
 )
 def predict_and_evaluate_cli(model_dir, dataset_dir, output_dir, task_type):
     """Make predictions and evaluate the model."""
-    predict_and_evaluate(model_dir, dataset_dir, output_dir, task_type)
+    evaluator = Evaluator(model_dir, dataset_dir, output_dir, task_type)
+    evaluator.evaluate()
 
 
 @cli.command()
@@ -176,7 +166,8 @@ def predict_and_evaluate_cli(model_dir, dataset_dir, output_dir, task_type):
 )
 def shap_analysis_cli(model_dir, dataset_dir, output_dir, task_type):
     """Perform SHAP analysis."""
-    extract_shap_features(model_dir, dataset_dir, output_dir, task_type)
+    extractor = Extractor(model_dir, dataset_dir, output_dir, task_type)
+    extractor.extract()
 
 
 if __name__ == "__main__":

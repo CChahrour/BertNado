@@ -2,53 +2,46 @@ import json
 import os
 from datetime import datetime
 import wandb
-from bertnado.training.finetune import fine_tune_model
+from bertnado.training.full_train import full_train
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
-def run_sweep(
-    config_path, output_dir, model_name, dataset, sweep_count, project_name, task_type
-):
-    """Run hyperparameter sweep using wandb."""
-    with open(config_path, "r") as f:
-        sweep_config = json.load(f)
-        sweep_config["name"] = (
-            f"sweep_{task_type}_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
-        )
-    sweep_id = wandb.sweep(sweep_config, project=project_name)
+class Sweeper:
+    def __init__(self, config_path, output_dir, model_name, dataset, task_type, project_name):
+        self.config_path = config_path
+        self.output_dir = output_dir
+        self.model_name = model_name
+        self.dataset = dataset
+        self.task_type = task_type
+        self.project_name = project_name
 
-    # Set WANDB_DIR environment variable to ensure wandb writes to the correct directory
-    os.makedirs(f"{output_dir}/wandb", exist_ok=True)
-    os.environ["WANDB_DIR"] = f"{output_dir}"
+    def run(self, sweep_count):
+        """Run hyperparameter tuning using WandB sweeps."""
+        # Load sweep configuration
+        with open(self.config_path, "r") as config_file:
+            sweep_config = json.load(config_file)
 
-    def sweep_train():
-        if not wandb.run:
-            wandb.init(
-                project=project_name,
-                group=task_type,
-                job_type="sweep",
-                dir=f"{output_dir}/wandb",
-                name=f"run_{datetime.now().strftime('%Y-%m-%d_%H%M')}",
+        # Initialize WandB sweep
+        sweep_id = wandb.sweep(sweep_config, project=self.project_name)
+
+        def train_fn():
+            wandb.init()
+            config = wandb.config
+
+            # Call full_train with the current sweep configuration
+            full_train(
+                self.output_dir,
+                self.model_name,
+                self.dataset,
+                config.best_config_path,
+                self.task_type,
+                self.project_name,
+                config.get("pos_weight", None),
             )
-        config = wandb.config
-        fine_tune_model(
-            output_dir=output_dir,
-            model_name=model_name,
-            dataset=dataset,
-            config=config,  # Pass the entire config dictionary
-            task_type=task_type,
-            project_name=project_name,
-        )
 
-    wandb.agent(sweep_id, function=sweep_train, count=sweep_count)
-
-    # Save the best configuration after the sweep
-    best_run = wandb.Api().sweep(sweep_id).best_run()
-    best_config = best_run.config
-    os.makedirs(output_dir, exist_ok=True)
-    with open(f"{output_dir}/best_config.json", "w") as f:
-        json.dump(best_config, f, indent=4)
+        # Run the sweep
+        wandb.agent(sweep_id, function=train_fn, count=sweep_count)
 
 
 if __name__ == "__main__":
@@ -97,12 +90,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    run_sweep(
+    sweeper = Sweeper(
         args.config_path,
         args.output_dir,
         args.model_name,
         args.dataset,
-        args.sweep_count,
-        args.project_name,
         args.task_type,
+        args.project_name,
     )
+    sweeper.run(args.sweep_count)

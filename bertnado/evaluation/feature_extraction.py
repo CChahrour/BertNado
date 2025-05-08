@@ -37,6 +37,22 @@ def extract_shap_features(model_path, test_path, output_dir):
     shap.save(f"{output_dir}/shap/shap_values.pkl", shap_values)
 
 
+class Extractor:
+    def __init__(self, model_dir, dataset_dir, output_dir, task_type):
+        self.model_dir = model_dir
+        self.dataset_dir = dataset_dir
+        self.output_dir = output_dir
+        self.task_type = task_type
+
+    def extract(self):
+        """Perform SHAP feature extraction."""
+        extract_shap_features(
+            self.model_dir,
+            self.dataset_dir,
+            self.output_dir,
+        )
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -55,4 +71,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    extract_shap_features(args.model_path, args.test_path, args.output_dir)
+    extractor = Extractor(args.model_path, args.test_path, args.output_dir, task_type=None)
+    extractor.extract()

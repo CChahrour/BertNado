@@ -1,9 +1,9 @@
 from torch.nn.modules.loss import BCEWithLogitsLoss, MSELoss
-from transformers.trainer import Trainer
+from transformers.trainer import Trainer as HFTrainer
 from .metrics import compute_metrics_regression
 
 
-class GeneralizedTrainer(Trainer):
+class GeneralizedTrainer(HFTrainer):
     def __init__(
         self, *args, task_type="binary_classification", pos_weight=None, **kwargs
     ):
@@ -46,3 +46,4 @@ class GeneralizedTrainer(Trainer):
         if self.task_type == "regression":
             self.compute_metrics = compute_metrics_regression
         return super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
+

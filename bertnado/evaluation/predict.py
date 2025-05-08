@@ -65,6 +65,23 @@ def predict_and_evaluate(model_path, test_path, output_dir, task_type):
         plt.savefig(f"{figures_dir}/predicted_vs_true.png")
 
 
+class Evaluator:
+    def __init__(self, model_dir, dataset_dir, output_dir, task_type):
+        self.model_dir = model_dir
+        self.dataset_dir = dataset_dir
+        self.output_dir = output_dir
+        self.task_type = task_type
+
+    def evaluate(self):
+        """Perform predictions and evaluate the model."""
+        predict_and_evaluate(
+            self.model_dir,
+            self.dataset_dir,
+            self.output_dir,
+            self.task_type,
+        )
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -90,6 +107,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    predict_and_evaluate(
+    evaluator = Evaluator(
         args.model_path, args.test_path, args.output_dir, args.task_type
     )
+    evaluator.evaluate()
