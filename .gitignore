@@ -4,3 +4,4 @@ __pycache__/
 bertnado.egg-info
 .coverage
 mock*
+run.sh
