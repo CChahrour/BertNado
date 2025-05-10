@@ -1,4 +1,5 @@
 import os
+import pickle
 
 import matplotlib.pyplot as plt
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
@@ -75,6 +76,15 @@ def predict_and_evaluate(tokenizer_name, model_path, dataset, output_dir, task_t
 
         # Save the scatter plot
         plt.savefig(f"{figures_dir}/predicted_vs_true.png")
+        plt.close()
+        print(f"Plot saved to {figures_dir}/predicted_vs_true.png")
+
+    # Save predictions to output directory
+    os.makedirs(output_dir, exist_ok=True)
+    predictions_file = os.path.join(output_dir, "predictions.pkl")
+    with open(predictions_file, "wb") as f:
+        pickle.dump(predictions, f)
+    print(f"Predictions saved to {predictions_file}")
 
 
 class Evaluator:
