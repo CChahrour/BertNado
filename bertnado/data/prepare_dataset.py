@@ -81,7 +81,8 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
         plt.xlabel("Labels")
         plt.ylabel("Count")
         plt.savefig(
-            os.path.join(output_dir, f"label_distribution_{set}.png", dpi=600),
+            os.path.join(output_dir, f"label_distribution_{set}.png"),
+            dpi=600,
         )
         plt.close()
 
