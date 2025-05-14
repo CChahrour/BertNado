@@ -38,7 +38,7 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
 
     if task_type in ["binary_classification", "multilabel_classification"]:
         # Binarize labels with a threshold of >0
-        data[target_column] = (data[target_column] > 0).astype(int)
+        data[target_column] = (data[target_column] > 0.2).astype(int)
 
         # Balance class weights
         class_counts = data[target_column].value_counts()
@@ -73,18 +73,18 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
     val = data[data["chromosome"] == "chr8"]
     train = data[~data["chromosome"].isin(["chr8", "chr9"])]
 
-    for set in [train, val, test]:
-        # plot the distribution of the labels
+    for name, subset in zip(["train", "val", "test"], [train, val, test]):
         plt.figure(figsize=(8, 6))
-        sns.histplot(set["labels"], bins=50, kde=True)
-        plt.title(f"Label Distribution for {set}")
+        sns.histplot(subset["labels"], bins=30, kde=True)
+        plt.title(f"Label Distribution: {name}")
         plt.xlabel("Labels")
         plt.ylabel("Count")
         plt.savefig(
-            os.path.join(output_dir, f"label_distribution_{set}.png"),
+            os.path.join(output_dir, f"label_distribution_{name}.png"),
             dpi=600,
         )
         plt.close()
+
 
     # Fetch sequences from FASTA
     for subset in [train, val, test]:
