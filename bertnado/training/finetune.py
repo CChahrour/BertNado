@@ -77,7 +77,7 @@ class FineTuner:
         # Define training arguments
         training_args = TrainingArguments(
             output_dir=self.output_dir,
-            eval_strategy="step",
+            eval_strategy="steps",
             learning_rate=config.get("learning_rate", 5e-5),
             per_device_train_batch_size=config.get("per_device_train_batch_size", 16),
             per_device_eval_batch_size=config.get("per_device_eval_batch_size", 16),
@@ -85,7 +85,7 @@ class FineTuner:
             weight_decay=config.get("weight_decay", 0.01),
             logging_dir=f"{self.output_dir}/logs",
             logging_steps=config.get("logging_steps", 10),
-            save_strategy="step",
+            save_strategy="steps",
             save_total_limit=2,
             load_best_model_at_end=True,
             report_to="wandb",
@@ -101,6 +101,19 @@ class FineTuner:
             compute_metrics = compute_metrics_regression
         else:
             raise ValueError(f"Unsupported task type: {self.task_type}")
+
+        # Auto-load pos_weight from class_weights.json if not passed
+        if self.pos_weight is None and self.task_type in ["binary_classification", "multilabel_classification"]:
+            class_weights_path = os.path.join(self.dataset, "class_weights.json")
+            if os.path.exists(class_weights_path):
+                with open(class_weights_path) as f:
+                    class_weights = json.load(f)
+                # For binary classification, use pos_weight = neg / pos
+                if "1" in class_weights and "0" in class_weights:
+                    pos_weight_val = class_weights["0"] / class_weights["1"]
+                    self.pos_weight = torch.tensor([pos_weight_val])
+                    print(f"⚖️ Loaded pos_weight from class_weights.json: {self.pos_weight.item():.2f}")
+
 
         # Define Trainer
         trainer = GeneralizedTrainer(

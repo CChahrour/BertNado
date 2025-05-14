@@ -23,6 +23,7 @@ def tokenize_dataset(dataset, tokenizer_name):
 
 def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_dir, task_type):
     """Load and split the dataset into training, validation, and test sets based on chromosome, fetch sequences, and convert to Hugging Face Dataset."""
+    os.makedirs(output_dir, exist_ok=True)
     data = pd.read_parquet(file_path)
     data["region"] = data.index
     data[["chromosome", "range"]] = data["region"].str.split(":", expand=True)
