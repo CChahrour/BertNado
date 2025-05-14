@@ -51,16 +51,35 @@ def cli():
     ),
     help="Task type.",
 )
-def prepare_data_cli(file_path, target_column, fasta_file, tokenizer_name, output_dir, task_type):
+@click.option(
+    "--threshold",
+    default=0.5,
+    type=float,
+    help="Threshold for binary classification (default: 0.5).",
+)
+def prepare_data_cli(
+    file_path,
+    target_column,
+    fasta_file,
+    tokenizer_name,
+    output_dir,
+    task_type,
+    threshold,
+):
     """Prepare the dataset for training."""
     preparer = DatasetPreparer(
-        file_path, target_column, fasta_file, tokenizer_name, output_dir, task_type
+        file_path,
+        target_column,
+        fasta_file,
+        tokenizer_name,
+        output_dir,
+        task_type,
+        threshold,
     )
     dataset = preparer.prepare()
-    return dataset
+    
     print(f"Dataset prepared and saved to {output_dir}")
-
-
+    return dataset
 
 @cli.command()
 @click.option(
@@ -213,7 +232,9 @@ def full_train_cli(
     ),
     help="Task type.",
 )
-def predict_and_evaluate_cli(tokenizer_name, model_dir, dataset_dir, output_dir, task_type):
+def predict_and_evaluate_cli(
+    tokenizer_name, model_dir, dataset_dir, output_dir, task_type
+):
     """Make predictions and evaluate the model."""
     evaluator = Evaluator(tokenizer_name, model_dir, dataset_dir, output_dir, task_type)
     evaluator.evaluate()
@@ -255,9 +276,13 @@ def predict_and_evaluate_cli(tokenizer_name, model_dir, dataset_dir, output_dir,
     type=click.Choice(["shap", "lig", "both"]),
     help="Analysis method: SHAP, LIG, or both.",
 )
-def feature_analysis_cli(tokenizer_name, model_dir, dataset_dir, output_dir, task_type, method):
+def feature_analysis_cli(
+    tokenizer_name, model_dir, dataset_dir, output_dir, task_type, method
+):
     """Perform feature analysis using SHAP, LIG, or both."""
-    attributer = Attributer(tokenizer_name, model_dir, dataset_dir, output_dir, task_type)
+    attributer = Attributer(
+        tokenizer_name, model_dir, dataset_dir, output_dir, task_type
+    )
 
     if method == "shap" or method == "both":
         attributer.extract_shap_features()
