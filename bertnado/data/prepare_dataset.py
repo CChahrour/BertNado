@@ -34,31 +34,11 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
 
     data = data[
         ["chromosome", "start", "end", target_column]
-    ]  # Ensure necessary columns are included
+    ]
 
-    if task_type in ["binary_classification", "multilabel_classification"]:
-        # Binarize labels with a threshold of >0
+    if task_type == "binary_classification":
         data[target_column] = (data[target_column] > threshold).astype(int)
 
-        # Balance class weights
-        class_counts = data[target_column].value_counts()
-        # plot class distribution
-        plt.figure(figsize=(8, 6))
-        sns.countplot(x=target_column, data=data)
-        plt.title("Class Distribution")
-        plt.xlabel("Class")
-        plt.ylabel("Count")
-        plt.savefig(os.path.join(output_dir, "class_distribution.png"), dpi=600)
-        plt.close()
-        print(f"Class distribution saved to {os.path.join(output_dir, 'class_distribution.png')}")
-        # Calculate class weights
-        class_weights = {cls: 1.0 / count for cls, count in class_counts.items()}
-        print(f"Class weights: {class_weights}")
-        # Save class weights to a JSON file
-        class_weights_path = os.path.join(output_dir, "class_weights.json")
-        with open(class_weights_path, "w") as class_weights_file:
-            json.dump(class_weights, class_weights_file, indent=2)
-        print(f"Class weights saved to {class_weights_path}")
     if task_type in ["binary_classification", "regression"]:
         data = data.rename(columns={target_column: "labels"})
     elif task_type == "multilabel_classification":
@@ -85,6 +65,31 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
         )
         plt.close()
 
+    if task_type in ["binary_classification"]:
+        # plot class distribution
+        plt.figure(figsize=(8, 6))
+        sns.countplot(x="labels", data=data)
+        plt.title("Class Distribution")
+        plt.xlabel("Class")
+        plt.ylabel("Count")
+        plt.savefig(os.path.join(output_dir, "class_distribution.png"), dpi=600)
+        plt.close()
+        print(f"Class distribution saved to {os.path.join(output_dir, 'class_distribution.png')}")
+        # Calculate class frequencies
+        class_counts = train["labels"].value_counts()
+        pos_count = class_counts.get(1, 0)
+        neg_count = class_counts.get(0, 0)
+        class_dict = {
+            "0": neg_count,
+            "1": pos_count,
+        }
+
+        print(f"Class frequencies: {class_dict}")
+        
+        class_weights_path = os.path.join(output_dir, "class_weights.json")
+        with open(class_weights_path, "w") as class_weights_file:
+            json.dump(class_dict, class_weights_file, indent=2)
+        print(f"Class frequencies saved to {class_weights_path}")
 
     # Fetch sequences from FASTA
     for subset in [train, val, test]:
@@ -115,13 +120,14 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
 
 
 class DatasetPreparer:
-    def __init__(self, file_path, target_column, fasta_file, tokenizer_name, output_dir, task_type):
+    def __init__(self, file_path, target_column, fasta_file, tokenizer_name, output_dir, task_type, threshold=0.5):
         self.file_path = file_path
         self.target_column = target_column
         self.fasta_file = fasta_file
         self.tokenizer_name = tokenizer_name
         self.output_dir = output_dir
         self.task_type = task_type
+        self.threshold = threshold
 
     def prepare(self):
         """Prepare the dataset for training."""
@@ -132,6 +138,7 @@ class DatasetPreparer:
             self.tokenizer_name,
             self.output_dir,
             self.task_type,
+            self.threshold,
         )
 
 
