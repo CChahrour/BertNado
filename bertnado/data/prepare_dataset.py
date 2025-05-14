@@ -23,7 +23,7 @@ def tokenize_dataset(dataset, tokenizer_name):
     return dataset.map(tokenize_function, batched=True)
 
 
-def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_dir, task_type):
+def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_dir, task_type, threshold=0.5):
     """Load and split the dataset into training, validation, and test sets based on chromosome, fetch sequences, and convert to Hugging Face Dataset."""
     os.makedirs(output_dir, exist_ok=True)
     data = pd.read_parquet(file_path)
@@ -38,7 +38,7 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
 
     if task_type in ["binary_classification", "multilabel_classification"]:
         # Binarize labels with a threshold of >0
-        data[target_column] = (data[target_column] > 0.2).astype(int)
+        data[target_column] = (data[target_column] > threshold).astype(int)
 
         # Balance class weights
         class_counts = data[target_column].value_counts()
@@ -169,6 +169,12 @@ if __name__ == "__main__":
         choices=["binary_classification", "multilabel_classification", "regression"],
         help="Type of task to evaluate.",
     )
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=0.5,
+        help="Threshold for binarizing labels (default: 0.5).",
+    )
 
     args = parser.parse_args()
 
@@ -179,5 +185,6 @@ if __name__ == "__main__":
         args.tokenizer_name,
         args.output_dir,
         args.task_type,
+        args.threshold,
     )
     preparer.prepare()
