@@ -102,6 +102,19 @@ class FineTuner:
         else:
             raise ValueError(f"Unsupported task type: {self.task_type}")
 
+        # Auto-load pos_weight from class_weights.json if not passed
+        if self.pos_weight is None and self.task_type in ["binary_classification", "multilabel_classification"]:
+            class_weights_path = os.path.join(self.dataset, "class_weights.json")
+            if os.path.exists(class_weights_path):
+                with open(class_weights_path) as f:
+                    class_weights = json.load(f)
+                # For binary classification, use pos_weight = neg / pos
+                if "1" in class_weights and "0" in class_weights:
+                    pos_weight_val = class_weights["0"] / class_weights["1"]
+                    self.pos_weight = torch.tensor([pos_weight_val])
+                    print(f"⚖️ Loaded pos_weight from class_weights.json: {self.pos_weight.item():.2f}")
+
+
         # Define Trainer
         trainer = GeneralizedTrainer(
             model=model,
