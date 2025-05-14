@@ -80,15 +80,15 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
         pos_count = class_counts.get(1, 0)
         neg_count = class_counts.get(0, 0)
         class_dict = {
-            "0": neg_count,
-            "1": pos_count,
+            "0": int(neg_count),
+            "1": int(pos_count),
         }
 
         print(f"Class frequencies: {class_dict}")
         
         class_weights_path = os.path.join(output_dir, "class_weights.json")
-        with open(class_weights_path, "w") as class_weights_file:
-            json.dump(class_dict, class_weights_file, indent=2)
+        with open(class_weights_path, "w") as f:
+            json.dump(class_dict, f, indent=2)
         print(f"Class frequencies saved to {class_weights_path}")
 
     # Fetch sequences from FASTA
