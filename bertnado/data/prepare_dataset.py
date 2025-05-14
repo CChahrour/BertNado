@@ -3,7 +3,9 @@ import json
 import os
 import warnings
 
+import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 from crested.utils import fetch_sequences
 from datasets import Dataset, DatasetDict
 from transformers import AutoTokenizer
@@ -40,6 +42,16 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
 
         # Balance class weights
         class_counts = data[target_column].value_counts()
+        # plot class distribution
+        plt.figure(figsize=(8, 6))
+        sns.countplot(x=target_column, data=data)
+        plt.title("Class Distribution")
+        plt.xlabel("Class")
+        plt.ylabel("Count")
+        plt.savefig(os.path.join(output_dir, "class_distribution.png"), dpi=600)
+        plt.close()
+        print(f"Class distribution saved to {os.path.join(output_dir, 'class_distribution.png')}")
+        # Calculate class weights
         class_weights = {cls: 1.0 / count for cls, count in class_counts.items()}
         print(f"Class weights: {class_weights}")
         # Save class weights to a JSON file
@@ -60,6 +72,18 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
     test = data[data["chromosome"] == "chr9"]
     val = data[data["chromosome"] == "chr8"]
     train = data[~data["chromosome"].isin(["chr8", "chr9"])]
+
+    for set in [train, val, test]:
+        # plot the distribution of the labels
+        plt.figure(figsize=(8, 6))
+        sns.histplot(set["labels"], bins=50, kde=True)
+        plt.title(f"Label Distribution for {set}")
+        plt.xlabel("Labels")
+        plt.ylabel("Count")
+        plt.savefig(
+            os.path.join(output_dir, f"label_distribution_{set}.png", dpi=600),
+        )
+        plt.close()
 
     # Fetch sequences from FASTA
     for subset in [train, val, test]:
