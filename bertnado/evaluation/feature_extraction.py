@@ -42,6 +42,7 @@ class Attributer:
             model=model,
             tokenizer=tokenizer,
             return_all_scores=True,
+            truncation=True,
         )
 
         # Wrap the pipeline with SHAP's TransformersPipeline

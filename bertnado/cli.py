@@ -55,6 +55,7 @@ def cli():
     "--threshold",
     default=0.5,
     type=float,
+    required=False,
     help="Threshold for binary classification (default: 0.5).",
 )
 def prepare_data_cli(
@@ -232,11 +233,18 @@ def full_train_cli(
     ),
     help="Task type.",
 )
+@click.option(
+    "--threshold",
+    default=0.5,
+    type=float,
+    required=False,
+    help="Threshold for binary/multilabel classification.",
+)
 def predict_and_evaluate_cli(
-    tokenizer_name, model_dir, dataset_dir, output_dir, task_type
+    tokenizer_name, model_dir, dataset_dir, output_dir, task_type, threshold
 ):
     """Make predictions and evaluate the model."""
-    evaluator = Evaluator(tokenizer_name, model_dir, dataset_dir, output_dir, task_type)
+    evaluator = Evaluator(tokenizer_name, model_dir, dataset_dir, output_dir, task_type, threshold)
     evaluator.evaluate()
 
 
