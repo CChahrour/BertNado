@@ -78,9 +78,10 @@ def prepare_data_cli(
         threshold,
     )
     dataset = preparer.prepare()
-    
+
     print(f"Dataset prepared and saved to {output_dir}")
     return dataset
+
 
 @cli.command()
 @click.option(
@@ -244,7 +245,9 @@ def predict_and_evaluate_cli(
     tokenizer_name, model_dir, dataset_dir, output_dir, task_type, threshold
 ):
     """Make predictions and evaluate the model."""
-    evaluator = Evaluator(tokenizer_name, model_dir, dataset_dir, output_dir, task_type, threshold)
+    evaluator = Evaluator(
+        tokenizer_name, model_dir, dataset_dir, output_dir, task_type, threshold
+    )
     evaluator.evaluate()
 
 
@@ -284,20 +287,51 @@ def predict_and_evaluate_cli(
     type=click.Choice(["shap", "lig", "both"]),
     help="Analysis method: SHAP, LIG, or both.",
 )
+@click.option(
+    "--target-class",
+    default=1,
+    type=int,
+    required=False,
+    help="Target class for LIG analysis (default: 1).",
+)
+@click.option(
+    "--max-examples",
+    default=None,
+    type=int,
+    required=False,
+    help="Maximum number of examples to process (default: None).",
+)
+@click.option(
+    "--n-steps",
+    default=50,
+    type=int,
+    required=False,
+    help="Number of steps for LIG analysis (default: 50).",
+)
 def feature_analysis_cli(
-    tokenizer_name, model_dir, dataset_dir, output_dir, task_type, method
+    tokenizer_name,
+    model_dir,
+    dataset_dir,
+    output_dir,
+    task_type,
+    method,
+    target_class,
+    max_examples,
+    n_steps,
 ):
     """Perform feature analysis using SHAP, LIG, or both."""
     attributer = Attributer(
-        tokenizer_name, model_dir, dataset_dir, output_dir, task_type
+        tokenizer_name,
+        model_dir,
+        dataset_dir,
+        output_dir,
+        task_type,
+        target_class,
+        n_steps,
+        max_examples,
+        method,
     )
-
-    if method == "shap" or method == "both":
-        attributer.extract_shap_features()
-
-    if method == "lig" or method == "both":
-        attributer.extract_lig()
-        attributer.visualize_lig()
+    attributer.extract()
 
 
 # Register underscore aliases for commands to satisfy tests
