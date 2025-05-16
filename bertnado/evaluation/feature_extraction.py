@@ -53,21 +53,39 @@ class Attributer:
         dataset = load_from_disk(self.dataset_dir)
         test_dataset = dataset["test"]
 
-        # Use the 'text-classification' pipeline for all task types
-        hf_pipeline = pipeline(
-            "text-classification",
-            model=model,
-            tokenizer=tokenizer,
-            return_all_scores=True,
-            truncation=True,
-            max_length=512,
-        )
-
-        # Wrap the pipeline with SHAP's TransformersPipeline
-        shap_pipeline = TransformersPipeline(hf_pipeline)
-
-        # Run SHAP analysis
-        shap_values = shap_pipeline(test_dataset["sequence"])
+        if self.max_examples:
+            test_dataset = test_dataset.select(range(min(self.max_examples, len(test_dataset))))
+        
+        sequences = test_dataset["sequence"]
+        
+        # Create SHAP explainer
+        classifier = pipeline("text-classification", model=model, tokenizer=tokenizer)
+        if self.task_type == "binary_classification":
+            classifier = TransformersPipeline(
+                model=model,
+                tokenizer=tokenizer,
+                task="text-classification",
+                device=0,
+            )
+        elif self.task_type == "multilabel_classification":
+            classifier = TransformersPipeline(
+                model=model,
+                tokenizer=tokenizer,
+                task="text-classification",
+                device=0,
+                top_k=None,
+            )
+        elif self.task_type == "regression":
+            classifier = TransformersPipeline(
+                model=model,
+                tokenizer=tokenizer,
+                task="text-regression",
+                device=0,
+            )
+        else:
+            raise ValueError(f"Unknown task type: {self.task_type}")
+        explainer = shap.Explainer(classifier)
+        shap_values = explainer(sequences)
 
         # Save SHAP values
         os.makedirs(f"{self.output_dir}/shap", exist_ok=True)

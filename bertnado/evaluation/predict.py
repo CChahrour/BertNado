@@ -7,6 +7,7 @@ import seaborn as sns
 import torch
 from datasets import load_from_disk
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from scipy.special import expit
 from sklearn.metrics import (
     accuracy_score, 
     average_precision_score, 
@@ -44,12 +45,7 @@ def predict_and_evaluate(
     # Load test dataset
     dataset = load_from_disk(dataset)
     test_dataset = dataset["test"]
-    true_values = np.array(test_dataset["labels"])
-    if task_type == "regression":
-        true_values = true_values.astype(float)
-    else:
-        true_values = true_values.astype(int)
-
+    
     # Predict
     print(f"Predicting on {len(test_dataset)} samples...")
     trainer = GeneralizedTrainer(model=model, tokenizer=tokenizer)
@@ -63,80 +59,101 @@ def predict_and_evaluate(
         pickle.dump(prediction_output, f)
     print(f"Predictions saved to {predictions_file}")
 
-    # Convert logits to predictions
-    if task_type == "regression":
-        predicted_values = logits.squeeze()
-    else: 
-        probs = torch.sigmoid(torch.tensor(logits)).numpy()
-        if probs.ndim > 1:
-            probs = probs.squeeze()
-        predicted_values = (probs > threshold).astype(int).squeeze()
-
-    # Evaluation
-    print("Sample true:", true_values[:3])
-    print("Sample pred:", predicted_values[:3])
-    print("Shapes:", type(true_values[0]), type(predicted_values[0]))
 
     figures_dir = os.path.join(output_dir, "figures")
     os.makedirs(figures_dir, exist_ok=True)
 
-    if task_type == "binary_classification":
-        accuracy = accuracy_score(true_values, predicted_values)
-        auc = roc_auc_score(true_values, predicted_values)
-        f1 = f1_score(true_values, predicted_values)
-        pr = average_precision_score(true_values, predicted_values)
-        print(f"Accuracy: {accuracy:.2f}, AUC: {auc:.2f}, F1: {f1:.2f}, PR: {pr:.2f}")
-        
-        print("Plotting ROC curve...")
-        fpr, tpr, _ = roc_curve(true_values, probs)
-        plt.figure(figsize=(8, 6))
-        plt.plot(fpr, tpr, label="ROC curve")
-        plt.xlabel("False Positive Rate", fontsize=14, fontweight="bold")
-        plt.ylabel("True Positive Rate", fontsize=14, fontweight="bold")
-        plt.title(f"ROC Curve: AUC = {auc:.2f}", fontsize=16, fontweight="bold")
-        plt.savefig(f"{figures_dir}/roc_curve.png", dpi=600)
-        plt.close()
 
-        print(f"ROC curve saved to {figures_dir}/roc_curve.png")
-        print("Plotting Precision-Recall curve...")
-        precision, recall, _ = precision_recall_curve(true_values, probs)
-        plt.figure(figsize=(8, 6))
-        plt.plot(recall, precision, label="Precision-Recall curve")
-        plt.xlabel("Recall", fontsize=14, fontweight="bold")
-        plt.ylabel("Precision", fontsize=14, fontweight="bold")
-        plt.title(f"Precision-Recall Curve: PR = {pr:.2f}", fontsize=16, fontweight="bold")
-        plt.savefig(f"{figures_dir}/precision_recall_curve.png", dpi=600)
-        plt.close()
-        
-        print("Plotting confusion matrix...")
-        cm = confusion_matrix(true_values, predicted_values)
-        plt.figure(figsize=(8, 6))
-        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", square=True)
-        plt.title("Confusion Matrix", fontsize=16, fontweight="bold")
-        plt.xticks(ticks=[0.5, 1.5], labels=["Unbound", "Bound"], rotation=90)
-        plt.yticks(ticks=[0.5, 1.5], labels=["Unbound", "Bound"], rotation=0)
-        plt.xlabel("Predicted", fontsize=14, fontweight="bold")
-        plt.ylabel("True", fontsize=14, fontweight="bold")
-        plt.savefig(f"{figures_dir}/confusion_matrix.png", dpi=600)
-        plt.close()
+    # Global styling for all plots
+    plt.rcParams.update({
+        "font.size": 16,
+        "font.weight": "bold",
+        "axes.titlesize": 16,
+        "axes.titleweight": "bold",
+        "axes.labelsize": 14,
+        "axes.labelweight": "bold",
+        "xtick.labelsize": 14,
+        "ytick.labelsize": 14,
+    })
 
-
-    elif task_type == "multilabel_classification":
-        f1 = f1_score(true_values, predicted_values, average="samples")
-        print(f"F1 Score (samples): {f1:.2f}")
-
-    elif task_type == "regression":
-        r2 = r2_score(true_values, predicted_values)
+    if task_type == "regression":
+        labels = prediction_output.label_ids
+        predicted_values = logits.squeeze()
+        r2 = r2_score(labels, predicted_values)
         print(f"R2 Score: {r2:.2f}")
         print("Plotting predicted vs true values...")
         plt.figure(figsize=(8, 6))
-        plt.scatter(true_values, predicted_values, alpha=0.5)
+        plt.scatter(labels, predicted_values, alpha=0.5)
         plt.xlabel("True Values", fontsize=14, fontweight="bold")
         plt.ylabel("Predicted Values", fontsize=14, fontweight="bold")
         plt.title(f"Predicted vs True Values (R2: {r2:.2f})", fontsize=16, fontweight="bold")
         plt.savefig(f"{figures_dir}/predicted_vs_true.png", dpi=600)
         plt.close()
         print(f"Plot saved to {figures_dir}/predicted_vs_true.png")
+
+    if task_type == "binary_classification":
+        labels = prediction_output.label_ids.flatten()
+        probs = expit(logits)
+        predicted_values = (probs > 0.5).astype(int).flatten()
+
+        accuracy = accuracy_score(labels, predicted_values)
+        auc = roc_auc_score(labels, probs)
+        f1 = f1_score(labels, predicted_values)
+        pr = average_precision_score(labels, predicted_values)
+        print(f"Accuracy: {accuracy:.2f}, AUC: {auc:.2f}, F1: {f1:.2f}, PR: {pr:.2f}")
+        
+        print("Plotting ROC curve...")
+        fpr, tpr, _ = roc_curve(labels, probs)
+        plt.figure(figsize=(6, 6))
+        plt.plot(fpr, tpr, label="ROC Curve", color='darkblue', linewidth=2)
+        plt.plot([0, 1], [0, 1], 'k--', linewidth=1)
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
+        plt.title(f"ROC Curve (AUC = {auc:.2f})")
+        plt.tight_layout()
+        plt.savefig(f"{figures_dir}/roc_curve.png", dpi=600, bbox_inches="tight")
+        plt.close()
+
+
+        print("Plotting Precision-Recall curve...")
+        precision, recall, _ = precision_recall_curve(labels, probs)
+        plt.figure(figsize=(6, 6))
+        plt.plot(recall, precision, label="PR Curve", color='darkgreen', linewidth=2)
+        plt.xlabel("Recall")
+        plt.ylabel("Precision")
+        plt.title(f"Precision-Recall Curve (AP = {pr:.2f})")
+        plt.tight_layout()
+        plt.savefig(f"{figures_dir}/precision_recall_curve.png", dpi=600, bbox_inches="tight")
+        plt.close()
+
+        
+        print("Plotting confusion matrix...")
+        cm = confusion_matrix(labels.flatten(), predicted_values.flatten())
+        plt.figure(figsize=(6, 6))
+        sns.heatmap(
+            cm,
+            annot=True,
+            fmt="d",
+            cmap="Blues",
+            cbar=False,
+            xticklabels=["Unbound", "Bound"],
+            yticklabels=["Unbound", "Bound"],
+            square=True,
+        )
+        plt.xlabel("Predicted")
+        plt.ylabel("True")
+        plt.xticks(fontsize=14)
+        plt.yticks(fontsize=14)
+        plt.title("Confusion Matrix")
+        plt.tight_layout()
+        plt.savefig(f"{figures_dir}/confusion_matrix.png", dpi=600, bbox_inches="tight")
+        plt.close()
+
+
+    elif task_type == "multilabel_classification":
+        f1 = f1_score(labels, predicted_values, average="samples")
+        print(f"F1 Score (samples): {f1:.2f}")
+        
 
         
     
