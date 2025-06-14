@@ -1,7 +1,14 @@
 # 🌪️ BertNado
 
-**BertNado** is a Python package for predicting chromatin-binding protein (CBP) binding from DNA sequence using Hugging Face transformers.  
-Built for **regression**, **binary**, and **multi-label classification** tasks with efficient fine-tuning via **PEFT/LoRA** and rich model interpretation.
+BertNado is a modular framework for fine-tuning Hugging Face DNA language models—such as GROVER, NT2, and DNABERT variants—on genomic prediction tasks. It supports both full fine-tuning and parameter-efficient transfer learning (PEFT) strategies like LoRA.
+
+🔧 Features:
+
+Model Support: GROVER, NT2 (Nucleotide Transformer), Mistral-DNA, DNABERT, and other Hugging Face-compatible DNA LMs.
+Tasks: Binary/multilabel classification, regression, and masked DNA modeling.
+Trainer Integration: Uses Hugging Face Trainer for seamless training, evaluation, and logging.
+PEFT Ready: Drop-in support for LoRA and other efficient tuning methods.
+W&B Logging: Built-in experiment tracking with Weights & Biases.
 
 ---
 
