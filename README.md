@@ -2,24 +2,20 @@
 
 BertNado is a modular framework for fine-tuning Hugging Face DNA language models—such as GROVER, NT2, and DNABERT variants—on genomic prediction tasks. It supports both full fine-tuning and parameter-efficient transfer learning (PEFT) strategies like LoRA.
 
-🔧 Features:
-
-Model Support: GROVER, NT2 (Nucleotide Transformer), Mistral-DNA, DNABERT, and other Hugging Face-compatible DNA LMs.
-Tasks: Binary/multilabel classification, regression, and masked DNA modeling.
-Trainer Integration: Uses Hugging Face Trainer for seamless training, evaluation, and logging.
-PEFT Ready: Drop-in support for LoRA and other efficient tuning methods.
-W&B Logging: Built-in experiment tracking with Weights & Biases.
-
 ---
 
-## 🧬 Features
+## 🔧 Features
 
-- ✅ Support for **regression**, **binary**, and **multi-label classification**
-- 🧪 Chromosome-aware train/val/test split
-- ⚡ Efficient fine-tuning using **LoRA (Low-Rank Adaptation)**
-- 🎯 Hyperparameter optimization via **Bayesian W&B sweeps**
-- 📊 Evaluation plots: **R²**, **ROC**, **PR**, **confusion matrix**
-- 🧠 Model interpretation via **SHAP** and **Captum Layer Integrated Gradients(LIG)**
+- ✅ Model Support: GROVER, NT2 (Nucleotide Transformer), DNABERT, and other Hugging Face-compatible DNA language models
+- 🧬 Task Flexibility: Supports regression, binary, and multi-label classification, as well as masked DNA modeling
+- 🧪 Chromosome-aware Splits: Train/val/test split by chromosome to prevent data leakage
+- ⚡ Efficient Fine-tuning: Drop-in support for parameter-efficient tuning methods like LoRA
+- 🎯 Hyperparameter Optimization: Integrated with Weights & Biases for Bayesian sweep-based tuning
+- 📊 Robust Evaluation: Automatically generates R², ROC, PR, and confusion matrix plots
+- 🧠 Model Interpretation: SHAP and Captum Layer Integrated Gradients (LIG) for biological insight
+- 🧰 Trainer Integration: Built on Hugging Face Trainer with custom heads and metrics
+- 📈 W&B Logging: Full experiment tracking with Weights & Biases out of the box
+
 
 ---
 
