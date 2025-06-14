@@ -1,6 +1,6 @@
 # 🌪️ BertNado
 
-BertNado is a modular framework for fine-tuning Hugging Face DNA language models—such as GROVER, NT2, and DNABERT variants—on genomic prediction tasks. It supports both full fine-tuning and parameter-efficient transfer learning (PEFT) strategies like LoRA.
+BertNado is a modular framework for fine-tuning Hugging Face DNA language models such as GROVER, NT2, and DNABERT variants on genomic prediction tasks. It supports both full fine-tuning and parameter-efficient transfer learning (PEFT) strategies like LoRA.
 
 ---
 
