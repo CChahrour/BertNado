@@ -1,5 +1,7 @@
 FROM python:3.12-slim
 
+ARG PACKAGE_VERSION=0.0.0
+
 ENV PIP_NO_CACHE_DIR=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
@@ -24,6 +26,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY . .
 
 RUN python -m pip install --upgrade pip \
-    && python -m pip install .
+    && SETUPTOOLS_SCM_PRETEND_VERSION_FOR_BERTNADO="${PACKAGE_VERSION}" \
+        python -m pip install .
 
 ENTRYPOINT ["bertnado"]

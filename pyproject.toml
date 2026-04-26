@@ -64,5 +64,9 @@ local_scheme = "no-local-version"
 [tool.setuptools.packages.find]
 include = ["bertnado*"]
 
+[tool.pytest.ini_options]
+addopts = ["--basetemp=test_output"]
+testpaths = ["tests"]
+
 [project.urls]
 Homepage = "https://github.com/CChahrour/BertNado"
