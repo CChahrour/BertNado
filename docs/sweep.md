@@ -203,6 +203,11 @@ BertNado uses the same metric in two places:
 - W&B uses it to select the best sweep run.
 - Hugging Face Trainer uses it to select the best checkpoint inside each run.
 
+When you launch a sweep with `bertnado-sweep`, W&B chooses each run's sampled
+configuration and BertNado trains with that exact `wandb.config`. This is what
+allows W&B's Bayesian search to use previous run results. The internal local
+sampler is only used when `Sweeper.run()` is called outside a W&B agent.
+
 You can define the metric in the JSON config or override it from the CLI/API
 with `--metric-name`, `--metric-goal`, `metric_name`, and `metric_goal`.
 

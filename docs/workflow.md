@@ -229,6 +229,11 @@ keyword is passed through to training. For fixed extra kwargs, use a
 `logging_dir`, `report_to`, `load_best_model_at_end`,
 `metric_for_best_model`, and `greater_is_better`.
 
+When launched with `bertnado-sweep`, W&B chooses each sampled configuration and
+BertNado trains with that exact `wandb.config`, so Bayesian sweeps can use
+previous runs to choose the next trial. Local random sampling is only a fallback
+for direct `Sweeper.run()` use outside a W&B agent.
+
 ### Optimization Metric
 
 You can set the optimization metric in the sweep config or override it from the
