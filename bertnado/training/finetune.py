@@ -1,6 +1,8 @@
 import os
 import json
+from collections.abc import Mapping
 from datetime import datetime
+from inspect import signature
 
 import torch
 from datasets import load_from_disk
@@ -12,7 +14,134 @@ from bertnado.training.metrics import (
     compute_metrics_regression,
     multi_label_classification_metrics,
 )
+from bertnado.training.optimization import apply_metric_to_training_config
 from bertnado.training.trainers import GeneralizedTrainer
+
+_TRAINING_ARG_ALIASES = {
+    "epochs": "num_train_epochs",
+    "evaluation_strategy": "eval_strategy",
+}
+_TRAINING_ARGS_KEY = "training_args"
+_TRAINING_ARGS_PREFIXES = ("training_args.", "training_args__")
+_RUNTIME_TRAINING_ARGS = {
+    "output_dir",
+    "logging_dir",
+    "report_to",
+    "metric_for_best_model",
+    "greater_is_better",
+    "load_best_model_at_end",
+}
+
+
+def _training_argument_names():
+    """Return keyword names accepted by Hugging Face TrainingArguments."""
+    return {
+        name
+        for name in signature(TrainingArguments.__init__).parameters
+        if name != "self"
+    }
+
+
+def _training_argument_kwargs(config, output_dir, job_type):
+    """Build TrainingArguments kwargs from BertNado config plus extras."""
+    kwargs = {
+        "output_dir": output_dir,
+        "eval_strategy": "steps",
+        "learning_rate": config.get("learning_rate", 5e-5),
+        "per_device_train_batch_size": config.get(
+            "per_device_train_batch_size", 16
+        ),
+        "per_device_eval_batch_size": config.get("per_device_eval_batch_size", 16),
+        "num_train_epochs": config.get("epochs", config.get("num_train_epochs", 3)),
+        "weight_decay": config.get("weight_decay", 0.01),
+        "logging_dir": f"{output_dir}/logs",
+        "logging_steps": config.get("logging_steps", 10),
+        "save_strategy": "steps",
+        "save_total_limit": 2,
+        "load_best_model_at_end": True,
+        "metric_for_best_model": config["metric_for_best_model"],
+        "greater_is_better": config["greater_is_better"],
+        "report_to": "wandb",
+        "max_steps": 1000 if job_type == "sweep" else -1,
+    }
+
+    kwargs.update(_top_level_training_argument_kwargs(config))
+    kwargs.update(_prefixed_training_argument_kwargs(config))
+    kwargs.update(_nested_training_argument_kwargs(config.get(_TRAINING_ARGS_KEY)))
+
+    kwargs.update(
+        {
+            "output_dir": output_dir,
+            "logging_dir": f"{output_dir}/logs",
+            "load_best_model_at_end": True,
+            "metric_for_best_model": config["metric_for_best_model"],
+            "greater_is_better": config["greater_is_better"],
+            "report_to": "wandb",
+        }
+    )
+    return kwargs
+
+
+def _top_level_training_argument_kwargs(config):
+    """Extract valid TrainingArguments kwargs from top-level sweep config."""
+    return _extract_training_argument_kwargs(
+        {
+            key: value
+            for key, value in config.items()
+            if key != _TRAINING_ARGS_KEY
+            and not any(str(key).startswith(prefix) for prefix in _TRAINING_ARGS_PREFIXES)
+        },
+        strict=False,
+    )
+
+
+def _prefixed_training_argument_kwargs(config):
+    """Extract ``training_args.foo`` and ``training_args__foo`` keys."""
+    prefixed = {}
+    for key, value in config.items():
+        if not isinstance(key, str):
+            continue
+        for prefix in _TRAINING_ARGS_PREFIXES:
+            if key.startswith(prefix):
+                prefixed[key.removeprefix(prefix)] = value
+                break
+    return _extract_training_argument_kwargs(prefixed, strict=True)
+
+
+def _nested_training_argument_kwargs(training_args):
+    """Extract kwargs from an explicit ``training_args`` object."""
+    if training_args is None:
+        return {}
+    if not isinstance(training_args, Mapping):
+        raise ValueError("training_args must be a JSON object.")
+    return _extract_training_argument_kwargs(training_args, strict=True)
+
+
+def _extract_training_argument_kwargs(source, strict):
+    valid_names = _training_argument_names()
+    extracted = {}
+    invalid = []
+
+    for raw_key, value in source.items():
+        if not isinstance(raw_key, str):
+            if strict:
+                invalid.append(str(raw_key))
+            continue
+        key = _TRAINING_ARG_ALIASES.get(raw_key, raw_key)
+        if key in source and raw_key in _TRAINING_ARG_ALIASES:
+            continue
+        if key in _RUNTIME_TRAINING_ARGS:
+            continue
+        if key not in valid_names:
+            if strict:
+                invalid.append(raw_key)
+            continue
+        extracted[key] = value
+
+    if invalid:
+        names = ", ".join(sorted(invalid))
+        raise ValueError(f"Unsupported TrainingArguments option(s): {names}.")
+    return extracted
 
 
 class FineTuner:
@@ -36,6 +165,7 @@ class FineTuner:
 
     def fine_tune(self, config):
         """Fine-tune the model using the provided configuration."""
+        config = apply_metric_to_training_config(config, self.task_type)
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
         # Set device
@@ -53,6 +183,7 @@ class FineTuner:
             job_type="sweep" if self.job_type == "sweep" else "full_train",
             dir=f"{self.output_dir}",
             name=f"run_{datetime.now().strftime('%Y-%m-%d_%H%M')}",
+            config=config,
         )
 
         # Load datasets
@@ -75,22 +206,8 @@ class FineTuner:
             self.model_name, num_labels=num_labels
         ).to(device)
 
-        # Define training arguments
         training_args = TrainingArguments(
-            output_dir=self.output_dir,
-            eval_strategy="steps",
-            learning_rate=config.get("learning_rate", 5e-5),
-            per_device_train_batch_size=config.get("per_device_train_batch_size", 16),
-            per_device_eval_batch_size=config.get("per_device_eval_batch_size", 16),
-            num_train_epochs=config.get("epochs", 3),
-            weight_decay=config.get("weight_decay", 0.01),
-            logging_dir=f"{self.output_dir}/logs",
-            logging_steps=config.get("logging_steps", 10),
-            save_strategy="steps",
-            save_total_limit=2,
-            load_best_model_at_end=True,
-            report_to="wandb",
-            max_steps=1000 if self.job_type == "sweep" else -1,
+            **_training_argument_kwargs(config, self.output_dir, self.job_type)
         )
 
         # Select the appropriate metrics function based on task type

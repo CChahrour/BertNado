@@ -4,25 +4,44 @@ import datetime
 import random
 import math
 from .finetune import FineTuner
+from .optimization import apply_metric_to_training_config
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
 class Sweeper:
-    def __init__(self, config_path, output_dir, model_name, dataset, task_type, project_name):
+    def __init__(
+        self,
+        config_path,
+        output_dir,
+        model_name,
+        dataset,
+        task_type,
+        project_name,
+        metric_name=None,
+        metric_goal=None,
+    ):
         self.config_path = config_path
         self.output_dir = output_dir
         self.model_name = model_name
         self.dataset = dataset
         self.task_type = task_type
         self.project_name = project_name
+        self.metric_name = metric_name
+        self.metric_goal = metric_goal
 
     def run(self, sweep_count):
         with open(self.config_path, "r") as config_file:
             sweep_config = json.load(config_file)
 
         for i in range(sweep_count):
-            config = self._generate_config(sweep_config)
+            config = apply_metric_to_training_config(
+                self._generate_config(sweep_config),
+                self.task_type,
+                metric_name=self.metric_name,
+                metric_goal=self.metric_goal,
+                sweep_config=sweep_config,
+            )
             fine_tuner = FineTuner(
                 model_name=self.model_name,
                 dataset=self.dataset,
@@ -104,6 +123,19 @@ if __name__ == "__main__":
         choices=["binary_classification", "multilabel_classification", "regression"],
         help="Type of task to fine-tune for.",
     )
+    parser.add_argument(
+        "--metric_name",
+        type=str,
+        default=None,
+        help="Metric used to choose best sweep runs and checkpoints.",
+    )
+    parser.add_argument(
+        "--metric_goal",
+        type=str,
+        choices=["maximize", "minimize"],
+        default=None,
+        help="Whether the optimization metric should be maximized or minimized.",
+    )
 
     args = parser.parse_args()
 
@@ -114,5 +146,7 @@ if __name__ == "__main__":
         args.dataset,
         args.task_type,
         args.project_name,
+        metric_name=args.metric_name,
+        metric_goal=args.metric_goal,
     )
     sweeper.run(args.sweep_count)

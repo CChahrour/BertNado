@@ -19,7 +19,7 @@ def out_dir(tmp_path):
     return tmp_path / "mock"
 
 
-def test_prepare_data_cli(runner: CliRunner, monkeypatch, out_dir: Path):
+def test_prepare_data(runner: CliRunner, monkeypatch, out_dir: Path):
     calls = {}
 
     class FakeDatasetPreparer:
@@ -53,7 +53,7 @@ def test_prepare_data_cli(runner: CliRunner, monkeypatch, out_dir: Path):
     result = runner.invoke(
         cli,
         [
-            "prepare-data-cli",
+            "prepare-data",
             "--file-path",
             str(out_dir / "input.parquet"),
             "--target-column",
@@ -74,7 +74,7 @@ def test_prepare_data_cli(runner: CliRunner, monkeypatch, out_dir: Path):
     assert calls["args"][5] == "regression"
 
 
-def test_run_sweep_cli(runner: CliRunner, monkeypatch, out_dir: Path):
+def test_run_sweep(runner: CliRunner, monkeypatch, out_dir: Path):
     calls = []
     config_path = out_dir / "sweep_config.json"
     config_path.parent.mkdir(parents=True)
@@ -84,10 +84,27 @@ def test_run_sweep_cli(runner: CliRunner, monkeypatch, out_dir: Path):
 
     class FakeSweeper:
         def __init__(
-            self, config_path, output_dir, model_name, dataset, task_type, project_name
+            self,
+            config_path,
+            output_dir,
+            model_name,
+            dataset,
+            task_type,
+            project_name,
+            metric_name=None,
+            metric_goal=None,
         ):
             calls.append(
-                (config_path, output_dir, model_name, dataset, task_type, project_name)
+                (
+                    config_path,
+                    output_dir,
+                    model_name,
+                    dataset,
+                    task_type,
+                    project_name,
+                    metric_name,
+                    metric_goal,
+                )
             )
 
         def run(self, sweep_count):
@@ -126,7 +143,7 @@ def test_run_sweep_cli(runner: CliRunner, monkeypatch, out_dir: Path):
     result = runner.invoke(
         cli,
         [
-            "run-sweep-cli",
+            "run-sweep",
             "--config-path",
             str(config_path),
             "--output-dir",
@@ -149,18 +166,43 @@ def test_run_sweep_cli(runner: CliRunner, monkeypatch, out_dir: Path):
     assert "finish" in calls
 
     best_config_path = out_dir / "sweep" / "best_sweep_config.json"
-    assert json.loads(best_config_path.read_text()) == {"learning_rate": 0.0001}
+    assert json.loads(best_config_path.read_text()) == {
+        "learning_rate": 0.0001,
+        "metric_for_best_model": "r2",
+        "greater_is_better": True,
+        "optimization_metric": {
+            "name": "eval/r2",
+            "goal": "maximize",
+        },
+    }
 
 
-def test_full_train_cli(runner: CliRunner, monkeypatch, out_dir: Path):
+def test_full_train(runner: CliRunner, monkeypatch, out_dir: Path):
     best_config_path = out_dir / "sweep" / "best_sweep_config.json"
     best_config_path.parent.mkdir(parents=True)
     best_config_path.write_text('{"learning_rate": 0.0001}')
     calls = {}
 
     class FakeFullTrainer:
-        def __init__(self, model_name, dataset, output_dir, task_type, project_name):
-            calls["args"] = (model_name, dataset, output_dir, task_type, project_name)
+        def __init__(
+            self,
+            model_name,
+            dataset,
+            output_dir,
+            task_type,
+            project_name,
+            metric_name=None,
+            metric_goal=None,
+        ):
+            calls["args"] = (
+                model_name,
+                dataset,
+                output_dir,
+                task_type,
+                project_name,
+                metric_name,
+                metric_goal,
+            )
             self.output_dir = Path(output_dir)
 
         def train(self, config_path):
@@ -172,7 +214,7 @@ def test_full_train_cli(runner: CliRunner, monkeypatch, out_dir: Path):
     result = runner.invoke(
         cli,
         [
-            "full-train-cli",
+            "full-train",
             "--output-dir",
             str(out_dir / "train"),
             "--model-name",
@@ -185,15 +227,21 @@ def test_full_train_cli(runner: CliRunner, monkeypatch, out_dir: Path):
             "regression",
             "--project-name",
             "mock_project",
+            "--metric-name",
+            "eval/r2",
+            "--metric-goal",
+            "maximize",
         ],
     )
 
     assert result.exit_code == 0
     assert calls["args"][3] == "regression"
+    assert calls["args"][5] == "eval/r2"
+    assert calls["args"][6] == "maximize"
     assert calls["config_path"] == str(best_config_path)
 
 
-def test_predict_and_evaluate_cli(runner: CliRunner, monkeypatch, out_dir: Path):
+def test_predict_and_evaluate(runner: CliRunner, monkeypatch, out_dir: Path):
     calls = {}
 
     class FakeEvaluator:
@@ -217,7 +265,7 @@ def test_predict_and_evaluate_cli(runner: CliRunner, monkeypatch, out_dir: Path)
     result = runner.invoke(
         cli,
         [
-            "predict_and_evaluate_cli",
+            "predict-and-evaluate",
             "--tokenizer-name",
             "PoetschLab/GROVER",
             "--model-dir",
@@ -236,7 +284,7 @@ def test_predict_and_evaluate_cli(runner: CliRunner, monkeypatch, out_dir: Path)
     assert calls["args"][4] == "regression"
 
 
-def test_feature_analysis_cli(runner: CliRunner, monkeypatch, out_dir: Path):
+def test_feature_analysis(runner: CliRunner, monkeypatch, out_dir: Path):
     calls = {}
 
     class FakeAttributer:
@@ -272,7 +320,7 @@ def test_feature_analysis_cli(runner: CliRunner, monkeypatch, out_dir: Path):
     result = runner.invoke(
         cli,
         [
-            "feature_analysis_cli",
+            "feature-analysis",
             "--tokenizer-name",
             "PoetschLab/GROVER",
             "--model-dir",

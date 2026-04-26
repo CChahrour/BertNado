@@ -22,7 +22,7 @@ BertNado is a modular framework for fine-tuning Hugging Face DNA language models
 - Chromosome-aware Splits: Train/val/test split by chromosome to prevent data leakage
 - Efficient Fine-tuning: Drop-in support for parameter-efficient tuning methods like LoRA
 - Hyperparameter Optimization: Integrated with Weights & Biases for Bayesian sweep-based tuning
-- Robust Evaluation: Automatically generates R², ROC, PR, and confusion matrix plots
+- Robust Evaluation: Automatically generates ROC, PR, and confusion matrix plots for binary classification
 - Model Interpretation: SHAP and Captum Layer Integrated Gradients (LIG) for biological insight
 - Trainer Integration: Built on Hugging Face Trainer with custom heads and metrics
 - W&B Logging: Full experiment tracking with Weights & Biases out of the box
@@ -68,11 +68,12 @@ bertnado/
 ```bash
 bertnado-data \
   --file-path test/data/mock_data.parquet \
-  --target-column test_A \
+  --target-column bound \
   --fasta-file test/data/mock_genome.fasta \
   --tokenizer-name PoetschLab/GROVER \
   --output-dir output/dataset \
-  --task-type regression
+  --task-type binary_classification \
+  --threshold 0.5
 ```
 
 ---
@@ -87,8 +88,13 @@ bertnado-sweep \
   --dataset output/dataset \
   --sweep-count 2 \
   --project-name project \
-  --task-type regression
+  --metric-name eval/roc_auc \
+  --metric-goal maximize \
+  --task-type binary_classification
 ```
+
+`--config-path` points to a Weights & Biases sweep config. The sweep metric is
+also used to choose the best checkpoint inside each run.
 
 ---
 
@@ -100,9 +106,14 @@ bertnado-train \
   --model-name PoetschLab/GROVER \
   --dataset output/dataset \
   --best-config-path output/sweep/best_sweep_config.json \
-  --task-type regression \
-  --project-name project
+  --task-type binary_classification \
+  --project-name project \
+  --metric-name eval/roc_auc \
+  --metric-goal maximize
 ```
+
+The metric flags are optional when `best_sweep_config.json` was produced by
+`bertnado-sweep`, because the resolved metric is saved in that file.
 
 ---
 
@@ -114,7 +125,7 @@ bertnado-predict \
   --model-dir output/train/model \
   --dataset-dir output/dataset \
   --output-dir output/predictions \
-  --task-type regression
+  --task-type binary_classification
 ```
 
 ---
@@ -127,14 +138,15 @@ bertnado-feature \
   --model-dir output/train/model \
   --dataset-dir output/dataset \
   --output-dir output/feature_analysis \
-  --task-type regression \
-  --method shap
+  --task-type binary_classification \
+  --method shap \
+  --target-class 1
 ```
 
 Run both SHAP and LIG:
 
 ```bash
---method both
+--method both --target-class 1
 ```
 
 ---
@@ -142,9 +154,8 @@ Run both SHAP and LIG:
 ## Outputs
 
 - **Figures** saved to `output/figures/`
-  - Regression: R² scatter plot
-  - Classification: ROC & PR curves
-  - Binary: Confusion matrix
+  - Binary classification: ROC and precision-recall curves
+  - Binary classification: Confusion matrix
 
 - **SHAP scores** saved to `output/shap/`
 - **Trained models** saved to `output/models/`

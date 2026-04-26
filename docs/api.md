@@ -3,6 +3,9 @@
 The `bertnado.api` module provides a lightweight Python interface over the same
 workflows exposed by the CLI.
 
+For a detailed explanation of the data, sweep, training, prediction, and
+feature-attribution stages, see the [workflow guide](workflow.md).
+
 ## Full Workflow
 
 This script runs the full BertNado workflow from Python: dataset preparation,
@@ -12,6 +15,8 @@ attribution.
 The `config_path` argument in the sweep step points to a Weights & Biases sweep
 configuration JSON file. The mock path below is just an example; see the
 [CLI sweep config section](cli.md#sweep-config-file) for a complete template.
+The sweep metric is also used by Hugging Face Trainer to choose the best
+checkpoint inside each run.
 
 BertNado logs sweeps and training runs to Weights & Biases. Run `wandb login`
 once on local machines, or set `WANDB_API_KEY` in non-interactive environments
@@ -30,7 +35,7 @@ from bertnado.api import (
 
 PROJECT_NAME = "bertnado"
 MODEL_NAME = "PoetschLab/GROVER"
-TASK_TYPE = "regression"
+TASK_TYPE = "binary_classification"
 
 DATA_DIR = Path("test/data")
 OUTPUT_DIR = Path("output")
@@ -45,11 +50,12 @@ FEATURE_DIR = OUTPUT_DIR / "feature_analysis"
 def main() -> None:
     prepare_dataset(
         file_path=DATA_DIR / "mock_data.parquet",
-        target_column="test_A",
+        target_column="bound",
         fasta_file=DATA_DIR / "mock_genome.fasta",
         output_dir=DATASET_DIR,
         task_type=TASK_TYPE,
         tokenizer_name=MODEL_NAME,
+        threshold=0.5,
     )
 
     sweep = run_sweep(
@@ -60,6 +66,8 @@ def main() -> None:
         task_type=TASK_TYPE,
         model_name=MODEL_NAME,
         sweep_count=10,
+        metric_name="eval/roc_auc",
+        metric_goal="maximize",
     )
 
     train_model(
@@ -69,6 +77,8 @@ def main() -> None:
         project_name=PROJECT_NAME,
         task_type=TASK_TYPE,
         model_name=MODEL_NAME,
+        metric_name=sweep["metric_name"],
+        metric_goal=sweep["metric_goal"],
     )
 
     predict_and_evaluate(
@@ -86,6 +96,7 @@ def main() -> None:
         task_type=TASK_TYPE,
         tokenizer_name=MODEL_NAME,
         method="both",
+        target_class=1,
     )
 
 
@@ -109,14 +120,15 @@ if __name__ == "__main__":
 
 === "Prepare"
 
-    ```python title="Prepare a regression dataset"
+    ```python title="Prepare a binary classification dataset"
     prepare_dataset(
         file_path="test/data/mock_data.parquet",
-        target_column="test_A",
+        target_column="bound",
         fasta_file="test/data/mock_genome.fasta",
         output_dir="output/dataset",
-        task_type="regression",
+        task_type="binary_classification",
         tokenizer_name="PoetschLab/GROVER",
+        threshold=0.5,
     )
     ```
 
@@ -128,14 +140,18 @@ if __name__ == "__main__":
         output_dir="output/sweep",
         dataset="output/dataset",
         project_name="bertnado",
-        task_type="regression",
+        task_type="binary_classification",
         model_name="PoetschLab/GROVER",
         sweep_count=10,
+        metric_name="eval/roc_auc",
+        metric_goal="maximize",
     )
     ```
 
     `config_path` is the sweep recipe, not input data. It tells BertNado which
-    metric to optimize and which hyperparameters to sample.
+    metric to optimize and which hyperparameters to sample. `metric_name` and
+    `metric_goal` are optional overrides; when omitted, BertNado uses the sweep
+    config metric or the task default.
 
 === "Train"
 
@@ -145,10 +161,16 @@ if __name__ == "__main__":
         dataset="output/dataset",
         best_config_path=sweep["best_config_path"],
         project_name="bertnado",
-        task_type="regression",
+        task_type="binary_classification",
         model_name="PoetschLab/GROVER",
+        metric_name=sweep["metric_name"],
+        metric_goal=sweep["metric_goal"],
     )
     ```
+
+    If the config was produced by `run_sweep`, the metric arguments are optional
+    because the resolved optimization metric is already saved in
+    `best_sweep_config.json`.
 
 === "Evaluate"
 
@@ -157,7 +179,7 @@ if __name__ == "__main__":
         model_dir="output/train/model",
         dataset_dir="output/dataset",
         output_dir="output/predictions",
-        task_type="regression",
+        task_type="binary_classification",
         tokenizer_name="PoetschLab/GROVER",
     )
     ```
@@ -169,9 +191,10 @@ if __name__ == "__main__":
         model_dir="output/train/model",
         dataset_dir="output/dataset",
         output_dir="output/feature_analysis",
-        task_type="regression",
+        task_type="binary_classification",
         tokenizer_name="PoetschLab/GROVER",
         method="both",
+        target_class=1,
     )
     ```
 

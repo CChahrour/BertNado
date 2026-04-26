@@ -19,6 +19,7 @@ from typing import Any, Literal
 PathLike = str | os.PathLike[str]
 TaskType = Literal["binary_classification", "multilabel_classification", "regression"]
 FeatureMethod = Literal["shap", "lig", "both"]
+MetricGoal = Literal["maximize", "minimize"]
 
 DEFAULT_MODEL_NAME = "PoetschLab/GROVER"
 DEFAULT_TOKENIZER_NAME = "PoetschLab/GROVER"
@@ -84,6 +85,8 @@ def run_sweep(
     task_type: TaskType,
     model_name: str = DEFAULT_MODEL_NAME,
     sweep_count: int = 10,
+    metric_name: str | None = None,
+    metric_goal: MetricGoal | None = None,
 ) -> dict[str, Any]:
     """Run a W&B hyperparameter sweep and save the best run config.
 
@@ -93,7 +96,8 @@ def run_sweep(
     run's configuration to ``best_sweep_config.json`` in ``output_dir``.
 
     :param config_path: Path to the W&B sweep configuration JSON file. The file
-        must include a ``metric`` object with ``name`` and ``goal`` fields.
+        can include a ``metric`` object with ``name`` and ``goal`` fields. When
+        omitted, BertNado uses a task-specific default metric.
     :param output_dir: Directory where ``best_sweep_config.json`` should be
         saved.
     :param dataset: Path to a dataset prepared by :func:`prepare_dataset`.
@@ -104,9 +108,14 @@ def run_sweep(
     :param model_name: Hugging Face model name or local model path. Defaults to
         ``"PoetschLab/GROVER"``.
     :param sweep_count: Number of W&B agent trials to run. Defaults to ``10``.
+    :param metric_name: Optional metric to optimize, such as
+        ``"eval/roc_auc"`` or ``"eval/loss"``. Overrides the sweep config
+        metric when provided.
+    :param metric_goal: Optional optimization direction. Must be ``"maximize"``
+        or ``"minimize"``. Overrides the sweep config goal when provided.
     :returns: Sweep metadata with ``sweep_id``, ``best_run_id``,
-        ``metric_name``, ``metric_value``, ``best_config``, and
-        ``best_config_path``.
+        ``metric_name``, ``metric_goal``, ``metric_for_best_model``,
+        ``metric_value``, ``best_config``, and ``best_config_path``.
     :raises ValueError: If ``task_type`` is not one of BertNado's supported task
         types.
     :raises RuntimeError: If the sweep completes without any recorded runs.
@@ -116,18 +125,29 @@ def run_sweep(
     output_path.mkdir(parents=True, exist_ok=True)
 
     import wandb
+    from bertnado.training.optimization import (
+        apply_metric_to_sweep_config,
+        apply_metric_to_training_config,
+        metric_summary_value,
+    )
     from bertnado.training.sweep import Sweeper
 
     with open(config_path, "r", encoding="utf-8") as config_file:
         sweep_config = json.load(config_file)
+    sweep_config, metric_settings = apply_metric_to_sweep_config(
+        sweep_config,
+        task_type,
+        metric_name=metric_name,
+        metric_goal=metric_goal,
+    )
 
     sweep_config["name"] = (
         f"{project_name}_{task_type}_"
         f"{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
     )
 
-    metric_name = sweep_config["metric"]["name"]
-    metric_goal = sweep_config["metric"]["goal"]
+    metric_name = metric_settings["name"]
+    metric_goal = metric_settings["goal"]
     sweep_id = wandb.sweep(sweep_config, project=project_name)
 
     try:
@@ -140,6 +160,8 @@ def run_sweep(
                 _path(dataset),
                 task_type,
                 project_name,
+                metric_name=metric_name,
+                metric_goal=metric_goal,
             ).run(1),
             count=sweep_count,
         )
@@ -152,11 +174,20 @@ def run_sweep(
         default_metric = float("-inf") if metric_goal == "maximize" else float("inf")
         best_run = sorted(
             sweep.runs,
-            key=lambda run: run.summary.get(metric_name, default_metric),
+            key=lambda run: metric_summary_value(
+                run.summary,
+                metric_name,
+                default_metric,
+            ),
             reverse=(metric_goal == "maximize"),
         )[0]
 
-        best_config = best_run.config
+        best_config = apply_metric_to_training_config(
+            best_run.config,
+            task_type,
+            metric_name=metric_name,
+            metric_goal=metric_goal,
+        )
         best_config_path = output_path / "best_sweep_config.json"
         with open(best_config_path, "w", encoding="utf-8") as best_config_file:
             json.dump(best_config, best_config_file, indent=2)
@@ -165,7 +196,9 @@ def run_sweep(
             "sweep_id": sweep_id,
             "best_run_id": best_run.id,
             "metric_name": metric_name,
-            "metric_value": best_run.summary.get(metric_name),
+            "metric_goal": metric_goal,
+            "metric_for_best_model": metric_settings["metric_for_best_model"],
+            "metric_value": metric_summary_value(best_run.summary, metric_name, None),
             "best_config": best_config,
             "best_config_path": str(best_config_path),
         }
@@ -181,6 +214,9 @@ def train_model(
     task_type: TaskType,
     model_name: str = DEFAULT_MODEL_NAME,
     pos_weight: float | list[float] | None = None,
+    metric_name: str | None = None,
+    metric_goal: MetricGoal | None = None,
+    **training_kwargs: Any,
 ) -> Any:
     """Train a final model from a saved sweep configuration.
 
@@ -202,6 +238,15 @@ def train_model(
     :param pos_weight: Optional positive-class weight for imbalanced
         classification. Pass a scalar, a list of per-class weights, or a
         tensor-like object with a ``to`` method. Ignored by regression tasks.
+    :param metric_name: Optional metric used to choose the best checkpoint, such
+        as ``"eval/roc_auc"`` or ``"eval/loss"``. When omitted, BertNado uses
+        the metric saved by :func:`run_sweep` or a task default.
+    :param metric_goal: Optional optimization direction. Must be ``"maximize"``
+        or ``"minimize"``. When omitted, BertNado uses the saved goal or infers
+        one from the metric.
+    :param training_kwargs: Extra Hugging Face ``TrainingArguments`` keyword
+        arguments, such as ``warmup_ratio``, ``lr_scheduler_type``,
+        ``gradient_accumulation_steps``, ``eval_steps``, or ``save_steps``.
     :returns: The value returned by
         :meth:`bertnado.training.full_train.FullTrainer.train`.
     :raises ValueError: If ``task_type`` is not one of BertNado's supported task
@@ -218,6 +263,9 @@ def train_model(
         task_type=task_type,
         project_name=project_name,
         pos_weight=_normalize_pos_weight(pos_weight),
+        metric_name=metric_name,
+        metric_goal=metric_goal,
+        training_args=training_kwargs,
     )
     return trainer.train(_path(best_config_path))
 
@@ -416,6 +464,7 @@ __all__ = [
     "DEFAULT_MODEL_NAME",
     "DEFAULT_TOKENIZER_NAME",
     "FeatureMethod",
+    "MetricGoal",
     "PathLike",
     "TaskType",
     "analyze_features",

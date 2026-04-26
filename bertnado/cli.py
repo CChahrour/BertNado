@@ -2,12 +2,72 @@ import datetime
 import click
 import json
 import os
-import wandb
-from bertnado.data.prepare_dataset import DatasetPreparer
-from bertnado.training.sweep import Sweeper
-from bertnado.training.full_train import FullTrainer
-from bertnado.evaluation.predict import Evaluator
-from bertnado.evaluation.feature_extraction import Attributer
+from bertnado.training.optimization import (
+    apply_metric_to_sweep_config,
+    apply_metric_to_training_config,
+    metric_summary_value,
+)
+
+DatasetPreparer = None
+Sweeper = None
+FullTrainer = None
+Evaluator = None
+Attributer = None
+wandb = None
+
+
+def _get_dataset_preparer():
+    global DatasetPreparer
+    if DatasetPreparer is None:
+        from bertnado.data.prepare_dataset import DatasetPreparer as imported
+
+        DatasetPreparer = imported
+    return DatasetPreparer
+
+
+def _get_sweeper():
+    global Sweeper
+    if Sweeper is None:
+        from bertnado.training.sweep import Sweeper as imported
+
+        Sweeper = imported
+    return Sweeper
+
+
+def _get_full_trainer():
+    global FullTrainer
+    if FullTrainer is None:
+        from bertnado.training.full_train import FullTrainer as imported
+
+        FullTrainer = imported
+    return FullTrainer
+
+
+def _get_evaluator():
+    global Evaluator
+    if Evaluator is None:
+        from bertnado.evaluation.predict import Evaluator as imported
+
+        Evaluator = imported
+    return Evaluator
+
+
+def _get_attributer():
+    global Attributer
+    if Attributer is None:
+        from bertnado.evaluation.feature_extraction import Attributer as imported
+
+        Attributer = imported
+    return Attributer
+
+
+def _get_wandb():
+    global wandb
+    if wandb is None:
+        import wandb as imported
+
+        wandb = imported
+    return wandb
 
 
 @click.group()
@@ -16,7 +76,7 @@ def cli():
     pass
 
 
-@cli.command()
+@cli.command(name="prepare-data")
 @click.option(
     "--file-path",
     required=True,
@@ -68,7 +128,7 @@ def prepare_data_cli(
     threshold,
 ):
     """Prepare the dataset for training."""
-    preparer = DatasetPreparer(
+    preparer = _get_dataset_preparer()(
         file_path,
         target_column,
         fasta_file,
@@ -83,7 +143,7 @@ def prepare_data_cli(
     return dataset
 
 
-@cli.command()
+@cli.command(name="run-sweep")
 @click.option(
     "--config-path",
     required=True,
@@ -108,6 +168,24 @@ def prepare_data_cli(
 @click.option("--sweep-count", default=10, type=int, help="Number of sweeps to run.")
 @click.option("--project-name", required=True, type=str, help="WandB project name.")
 @click.option(
+    "--metric-name",
+    default=None,
+    type=str,
+    help=(
+        "Metric to optimize, e.g. eval/roc_auc or eval/loss. "
+        "Defaults to the sweep config metric or the task default."
+    ),
+)
+@click.option(
+    "--metric-goal",
+    default=None,
+    type=click.Choice(["maximize", "minimize"]),
+    help=(
+        "Whether the metric should be maximized or minimized. "
+        "Defaults to the sweep config goal or an inferred goal."
+    ),
+)
+@click.option(
     "--task-type",
     required=True,
     type=click.Choice(
@@ -116,44 +194,74 @@ def prepare_data_cli(
     help="Task type.",
 )
 def run_sweep_cli(
-    config_path, output_dir, model_name, dataset, sweep_count, project_name, task_type
+    config_path,
+    output_dir,
+    model_name,
+    dataset,
+    sweep_count,
+    project_name,
+    metric_name,
+    metric_goal,
+    task_type,
 ):
     """Run hyperparameter sweep."""
     os.makedirs(output_dir, exist_ok=True)
+    wandb_client = _get_wandb()
+    sweeper_cls = _get_sweeper()
 
     with open(config_path, "r") as config_file:
         sweep_config = json.load(config_file)
+    sweep_config, metric_settings = apply_metric_to_sweep_config(
+        sweep_config,
+        task_type,
+        metric_name=metric_name,
+        metric_goal=metric_goal,
+    )
     sweep_config["name"] = (
         f"{project_name}_{task_type}_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
     )
 
     # Extract metric settings from the sweep configuration
-    metric_name = sweep_config["metric"]["name"]
-    metric_goal = sweep_config["metric"]["goal"]
+    metric_name = metric_settings["name"]
+    metric_goal = metric_settings["goal"]
 
     # Initialize the sweep with wandb
-    sweep_id = wandb.sweep(sweep_config, project=project_name)
+    sweep_id = wandb_client.sweep(sweep_config, project=project_name)
 
     # Run the sweep using wandb agent
-    wandb.agent(
+    wandb_client.agent(
         sweep_id,
-        function=lambda: Sweeper(
-            config_path, output_dir, model_name, dataset, task_type, project_name
+        function=lambda: sweeper_cls(
+            config_path,
+            output_dir,
+            model_name,
+            dataset,
+            task_type,
+            project_name,
+            metric_name=metric_name,
+            metric_goal=metric_goal,
         ).run(1),
         count=sweep_count,
     )
 
     # Retrieve the best run from the sweep
-    api = wandb.Api()
+    api = wandb_client.Api()
     sweep = api.sweep(f"{project_name}/{sweep_id}")
     best_run = sorted(
         sweep.runs,
-        key=lambda r: r.summary.get(
-            metric_name, float("-inf") if metric_goal == "maximize" else float("inf")
+        key=lambda r: metric_summary_value(
+            r.summary,
+            metric_name,
+            float("-inf") if metric_goal == "maximize" else float("inf"),
         ),
         reverse=(metric_goal == "maximize"),
     )[0]
-    best_config = best_run.config
+    best_config = apply_metric_to_training_config(
+        best_run.config,
+        task_type,
+        metric_name=metric_name,
+        metric_goal=metric_goal,
+    )
 
     # Save the best configuration to a JSON file
     best_config_path = os.path.join(output_dir, "best_sweep_config.json")
@@ -161,13 +269,14 @@ def run_sweep_cli(
         json.dump(best_config, best_config_file, indent=2)
 
     print(
-        f"Best run: {best_run.id} | {metric_name}: {best_run.summary.get(metric_name, 0)}"
+        f"Best run: {best_run.id} | "
+        f"{metric_name}: {metric_summary_value(best_run.summary, metric_name, 0)}"
     )
     print(f"Best configuration saved to {best_config_path}")
-    wandb.finish()
+    wandb_client.finish()
 
 
-@cli.command()
+@cli.command(name="full-train")
 @click.option(
     "--output-dir",
     required=True,
@@ -198,15 +307,45 @@ def run_sweep_cli(
     help="Task type.",
 )
 @click.option("--project-name", required=True, type=str, help="WandB project name.")
+@click.option(
+    "--metric-name",
+    default=None,
+    type=str,
+    help=(
+        "Metric used to choose the best checkpoint, e.g. eval/roc_auc or "
+        "eval/loss."
+    ),
+)
+@click.option(
+    "--metric-goal",
+    default=None,
+    type=click.Choice(["maximize", "minimize"]),
+    help="Whether the optimization metric should be maximized or minimized.",
+)
 def full_train_cli(
-    output_dir, model_name, dataset, best_config_path, task_type, project_name
+    output_dir,
+    model_name,
+    dataset,
+    best_config_path,
+    task_type,
+    project_name,
+    metric_name,
+    metric_goal,
 ):
     """Perform full training."""
-    trainer = FullTrainer(model_name, dataset, output_dir, task_type, project_name)
+    trainer = _get_full_trainer()(
+        model_name,
+        dataset,
+        output_dir,
+        task_type,
+        project_name,
+        metric_name=metric_name,
+        metric_goal=metric_goal,
+    )
     trainer.train(best_config_path)
 
 
-@cli.command()
+@cli.command(name="predict-and-evaluate")
 @click.option(
     "--tokenizer-name",
     default="PoetschLab/GROVER",
@@ -247,13 +386,13 @@ def predict_and_evaluate_cli(
     tokenizer_name, model_dir, dataset_dir, output_dir, task_type, threshold
 ):
     """Make predictions and evaluate the model."""
-    evaluator = Evaluator(
+    evaluator = _get_evaluator()(
         tokenizer_name, model_dir, dataset_dir, output_dir, task_type, threshold
     )
     evaluator.evaluate()
 
 
-@cli.command()
+@cli.command(name="feature-analysis")
 @click.option(
     "--tokenizer-name",
     default="PoetschLab/GROVER",
@@ -322,7 +461,7 @@ def feature_analysis_cli(
     n_steps,
 ):
     """Perform feature analysis using SHAP, LIG, or both."""
-    attributer = Attributer(
+    attributer = _get_attributer()(
         tokenizer_name,
         model_dir,
         dataset_dir,
@@ -336,9 +475,11 @@ def feature_analysis_cli(
     attributer.extract()
 
 
-# Register underscore aliases for commands to satisfy tests
-cli.add_command(predict_and_evaluate_cli, name="predict_and_evaluate_cli")
-cli.add_command(feature_analysis_cli, name="feature_analysis_cli")
+prepare_data = prepare_data_cli
+run_sweep = run_sweep_cli
+full_train = full_train_cli
+predict_and_evaluate = predict_and_evaluate_cli
+feature_analysis = feature_analysis_cli
 
 
 if __name__ == "__main__":

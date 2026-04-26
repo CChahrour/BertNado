@@ -18,7 +18,7 @@ strategies such as LoRA.
 - Chromosome-aware train, validation, and test splits to reduce data leakage.
 - Efficient fine-tuning with LoRA and other parameter-efficient transfer learning approaches.
 - Hyperparameter optimization through Weights & Biases sweeps.
-- Evaluation outputs for R2 plots, ROC curves, precision-recall curves, and confusion matrices.
+- Evaluation outputs for ROC curves, precision-recall curves, and confusion matrices in binary classification workflows.
 - Model interpretation with SHAP and Captum Layer Integrated Gradients.
 
 ## Installation
@@ -42,17 +42,19 @@ configuration, evaluates predictions, and extracts feature attributions.
 
 BertNado uses Weights & Biases for sweeps and training logs. Run `wandb login`
 locally, or set `WANDB_API_KEY` on servers and CI before starting the sweep.
+The sweep metric is also used to choose the best checkpoint during training.
 
 === "CLI"
 
     ```bash title="1. Prepare the dataset"
     bertnado-data \
       --file-path test/data/mock_data.parquet \
-      --target-column test_A \
+      --target-column bound \
       --fasta-file test/data/mock_genome.fasta \
       --tokenizer-name PoetschLab/GROVER \
       --output-dir output/dataset \
-      --task-type regression
+      --task-type binary_classification \
+      --threshold 0.5
     ```
 
     ```bash title="2. Run a sweep"
@@ -63,7 +65,9 @@ locally, or set `WANDB_API_KEY` on servers and CI before starting the sweep.
       --dataset output/dataset \
       --sweep-count 2 \
       --project-name project \
-      --task-type regression
+      --metric-name eval/roc_auc \
+      --metric-goal maximize \
+      --task-type binary_classification
     ```
 
     `--config-path` is the W&B sweep recipe. The mock path is only an example;
@@ -75,8 +79,10 @@ locally, or set `WANDB_API_KEY` on servers and CI before starting the sweep.
       --model-name PoetschLab/GROVER \
       --dataset output/dataset \
       --best-config-path output/sweep/best_sweep_config.json \
-      --task-type regression \
-      --project-name project
+      --task-type binary_classification \
+      --project-name project \
+      --metric-name eval/roc_auc \
+      --metric-goal maximize
     ```
 
     ```bash title="4. Predict and evaluate"
@@ -85,7 +91,7 @@ locally, or set `WANDB_API_KEY` on servers and CI before starting the sweep.
       --model-dir output/train/model \
       --dataset-dir output/dataset \
       --output-dir output/predictions \
-      --task-type regression
+      --task-type binary_classification
     ```
 
     ```bash title="5. Interpret the model"
@@ -94,8 +100,9 @@ locally, or set `WANDB_API_KEY` on servers and CI before starting the sweep.
       --model-dir output/train/model \
       --dataset-dir output/dataset \
       --output-dir output/feature_analysis \
-      --task-type regression \
-      --method both
+      --task-type binary_classification \
+      --method both \
+      --target-class 1
     ```
 
 === "Python API"
@@ -111,10 +118,11 @@ locally, or set `WANDB_API_KEY` on servers and CI before starting the sweep.
 
     prepare_dataset(
         file_path="test/data/mock_data.parquet",
-        target_column="test_A",
+        target_column="bound",
         fasta_file="test/data/mock_genome.fasta",
         output_dir="output/dataset",
-        task_type="regression",
+        task_type="binary_classification",
+        threshold=0.5,
     )
 
     sweep = run_sweep(
@@ -122,8 +130,10 @@ locally, or set `WANDB_API_KEY` on servers and CI before starting the sweep.
         output_dir="output/sweep",
         dataset="output/dataset",
         project_name="project",
-        task_type="regression",
+        task_type="binary_classification",
         sweep_count=2,
+        metric_name="eval/roc_auc",
+        metric_goal="maximize",
     )
 
     train_model(
@@ -131,22 +141,25 @@ locally, or set `WANDB_API_KEY` on servers and CI before starting the sweep.
         dataset="output/dataset",
         best_config_path=sweep["best_config_path"],
         project_name="project",
-        task_type="regression",
+        task_type="binary_classification",
+        metric_name=sweep["metric_name"],
+        metric_goal=sweep["metric_goal"],
     )
 
     predict_and_evaluate(
         model_dir="output/train/model",
         dataset_dir="output/dataset",
         output_dir="output/predictions",
-        task_type="regression",
+        task_type="binary_classification",
     )
 
     extract_features(
         model_dir="output/train/model",
         dataset_dir="output/dataset",
         output_dir="output/feature_analysis",
-        task_type="regression",
+        task_type="binary_classification",
         method="both",
+        target_class=1,
     )
     ```
 
@@ -156,6 +169,14 @@ Use the command-line interface when you want a reproducible shell workflow for
 data preparation, sweeps, full training, prediction, and feature analysis.
 
 [Open the CLI guide](cli.md)
+
+## Workflow
+
+Use the workflow guide when you want a deeper explanation of each stage,
+including expected data format, sweep configuration, training outputs,
+prediction artifacts, and SHAP/LIG attribution files.
+
+[Open the workflow guide](workflow.md)
 
 ## API
 
