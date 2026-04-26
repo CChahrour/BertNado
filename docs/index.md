@@ -2,7 +2,7 @@
 
 
 <p align="center">
-  <img src="assets/bertnado.png" alt="QuantNado logo" width="192">
+  <img src="assets/bertnado.png" alt="BertNado logo" width="192">
 </p>
 
 

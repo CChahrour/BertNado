@@ -1,7 +1,14 @@
 # BertNado
 
+
+[![Docs](https://img.shields.io/badge/docs-CChahrour.github.io-blue)](https://CChahrour.github.io/BertNado/)
+[![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
+[![CI](https://github.com/CChahrour/BertNado/actions/workflows/python-tests.yml/badge.svg)](https://github.com/CChahrour/BertNado/actions/workflows/python-tests.yml)
+[![Release](https://img.shields.io/github/v/release/CChahrour/BertNado?sort=semver)](https://github.com/CChahrour/BertNado/releases)
+[![PyPI Version](https://img.shields.io/pypi/v/BertNado)](https://pypi.org/project/BertNado)
+
 <p align="center">
-  <img src="docs/assets/bertnado.png" alt="QuantNado logo" width="192">
+  <img src="docs/assets/bertnado.png" alt="BertNado logo" width="192">
 </p>
 
 BertNado is a modular framework for fine-tuning Hugging Face DNA language models such as GROVER, NT2, and DNABERT variants on genomic prediction tasks. It supports both full fine-tuning and parameter-efficient transfer learning (PEFT) strategies like LoRA.
