@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://cchahrour.github.io/BertNado/cli/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../feature/">
       
       
         <link rel="next" href="../api/">
@@ -231,6 +231,26 @@
   
   
   
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../workflow/" class="md-tabs__link">
+          
+  
+  
+  Workflow
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
     
   
   
@@ -334,6 +354,233 @@
   
 
       </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflow
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Workflow
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Preparation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sweep/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hyperparameter Sweeping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../train/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fine-Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../predict/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Predictions And Evaluation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Extraction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -454,6 +701,17 @@
     <span class="md-ellipsis">
       
         Sweep Config File
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimization-metric" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optimization Metric
       
     </span>
   </a>
@@ -615,6 +873,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#optimization-metric" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optimization Metric
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -676,6 +945,8 @@
 <h1 id="cli">CLI<a class="headerlink" href="#cli" title="Permanent link">&para;</a></h1>
 <p>BertNado exposes each workflow step as a console script. The commands mirror
 the quickstart and can be chained into a full training and evaluation run.</p>
+<p>For a detailed explanation of what each step expects and writes, see the
+<a href="../workflow/">workflow guide</a>.</p>
 <h2 id="commands">Commands<a class="headerlink" href="#commands" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -708,20 +979,21 @@ the quickstart and can be chained into a full training and evaluation run.</p>
 </tbody>
 </table>
 <h2 id="prepare-data">Prepare Data<a class="headerlink" href="#prepare-data" title="Permanent link">&para;</a></h2>
-<div class="highlight"><span class="filename">Regression dataset</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bertnado-data<span class="w"> </span><span class="se">\</span>
+<div class="highlight"><span class="filename">Binary classification dataset</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bertnado-data<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span>--file-path<span class="w"> </span>test/data/mock_data.parquet<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span>--target-column<span class="w"> </span>test_A<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span>--target-column<span class="w"> </span>bound<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span>--fasta-file<span class="w"> </span>test/data/mock_genome.fasta<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span>--tokenizer-name<span class="w"> </span>PoetschLab/GROVER<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span>--output-dir<span class="w"> </span>output/dataset<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span>--task-type<span class="w"> </span>regression
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span>--task-type<span class="w"> </span>binary_classification<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span>--threshold<span class="w"> </span><span class="m">0</span>.5
 </code></pre></div>
 <p>Supported task types are <code>regression</code>, <code>binary_classification</code>, and
 <code>multilabel_classification</code>.</p>
 <p>For binary classification, pass <code>--threshold</code> to binarize the target column:</p>
 <div class="highlight"><span class="filename">Binary classification dataset</span><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bertnado-data<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>--file-path<span class="w"> </span>data/regions.parquet<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--target-column<span class="w"> </span>signal<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--target-column<span class="w"> </span>bound<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span>--fasta-file<span class="w"> </span>data/genome.fasta<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span>--output-dir<span class="w"> </span>output/dataset<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span>--task-type<span class="w"> </span>binary_classification<span class="w"> </span><span class="se">\</span>
@@ -748,7 +1020,9 @@ BertNado which W&amp;B project should receive the sweep and training runs.</p>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--dataset<span class="w"> </span>output/dataset<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span>--sweep-count<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span>--project-name<span class="w"> </span>bertnado<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span>--task-type<span class="w"> </span>regression
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span>--metric-name<span class="w"> </span>eval/roc_auc<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span>--metric-goal<span class="w"> </span>maximize<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span>--task-type<span class="w"> </span>binary_classification
 </code></pre></div>
 <p>The best run configuration is written to
 <code>output/sweep/best_sweep_config.json</code>.</p>
@@ -756,15 +1030,17 @@ BertNado which W&amp;B project should receive the sweep and training runs.</p>
 <p><code>--config-path</code> points to a JSON file that describes the Weights &amp; Biases sweep.
 The example path <code>test/data/mock_sweep_config.json</code> is a small test/demo config;
 for real training, create your own file and pass its path instead.</p>
-<p>The file controls which metric to optimize and which hyperparameters BertNado
-should sample for each sweep run. Common BertNado training parameters include
-<code>learning_rate</code>, <code>per_device_train_batch_size</code>, <code>per_device_eval_batch_size</code>,
-<code>epochs</code>, <code>weight_decay</code>, and <code>logging_steps</code>.</p>
+<p>The file controls which W&amp;B metric to optimize and which hyperparameters
+BertNado should sample for each sweep run. Common BertNado training parameters
+include <code>learning_rate</code>, <code>per_device_train_batch_size</code>,
+<code>per_device_eval_batch_size</code>, <code>epochs</code>, <code>weight_decay</code>, and <code>logging_steps</code>.
+Extra keys matching Hugging Face <code>TrainingArguments</code> kwargs are passed through
+to training.</p>
 <div class="highlight"><span class="filename">sweep_config.json</span><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">&quot;method&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bayes&quot;</span><span class="p">,</span>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">&quot;metric&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;eval_loss&quot;</span><span class="p">,</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nt">&quot;goal&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;minimize&quot;</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;eval/roc_auc&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nt">&quot;goal&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;maximize&quot;</span>
 <a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="p">},</span>
 <a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span><span class="nt">&quot;parameters&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="nt">&quot;learning_rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -786,29 +1062,79 @@ should sample for each sweep run. Common BertNado training parameters include
 <a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a><span class="w">    </span><span class="p">},</span>
 <a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a><span class="w">    </span><span class="nt">&quot;logging_steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a><span class="w">      </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
-<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a><span class="p">}</span>
+<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a><span class="w">    </span><span class="nt">&quot;warmup_ratio&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a><span class="w">      </span><span class="nt">&quot;values&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.03</span><span class="p">,</span><span class="w"> </span><span class="mf">0.06</span><span class="p">]</span>
+<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a><span class="w">    </span><span class="nt">&quot;lr_scheduler_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a><span class="w">      </span><span class="nt">&quot;values&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;cosine&quot;</span><span class="p">]</span>
+<a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a><span class="w">    </span><span class="nt">&quot;gradient_accumulation_steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a><span class="w">      </span><span class="nt">&quot;values&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">]</span>
+<a id="__codelineno-5-36" name="__codelineno-5-36" href="#__codelineno-5-36"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-5-37" name="__codelineno-5-37" href="#__codelineno-5-37"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-5-38" name="__codelineno-5-38" href="#__codelineno-5-38"></a><span class="p">}</span>
 </code></pre></div>
 <p>BertNado accepts fixed values with <code>value</code>, discrete choices with <code>values</code>, and
 the <code>uniform</code>, <code>int_uniform</code>, or <code>log_uniform_values</code> distributions.</p>
+<p>BertNado manages <code>output_dir</code>, <code>logging_dir</code>, <code>report_to</code>,
+<code>load_best_model_at_end</code>, <code>metric_for_best_model</code>, and <code>greater_is_better</code>
+itself.</p>
+<h3 id="optimization-metric">Optimization Metric<a class="headerlink" href="#optimization-metric" title="Permanent link">&para;</a></h3>
+<p>BertNado uses the same metric in two places:</p>
+<ul>
+<li>W&amp;B uses the sweep metric to choose the best sweep run.</li>
+<li>Hugging Face Trainer uses the same metric to choose the best checkpoint inside
+  each run.</li>
+</ul>
+<p>You can set the metric in the JSON file with the <code>metric</code> block, or override it
+from the CLI with <code>--metric-name</code> and <code>--metric-goal</code>. BertNado writes the
+resolved metric into <code>best_sweep_config.json</code> as <code>optimization_metric</code>,
+<code>metric_for_best_model</code>, and <code>greater_is_better</code>, so <code>bertnado-train</code> can reuse
+the same checkpoint-selection rule.</p>
+<p>For binary classification, the default optimization metric is:</p>
+<table>
+<thead>
+<tr>
+<th>Task type</th>
+<th>Default metric</th>
+<th>Goal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>binary_classification</code></td>
+<td><code>eval/roc_auc</code></td>
+<td><code>maximize</code></td>
+</tr>
+</tbody>
+</table>
+<p>Supported binary classification metrics are <code>loss</code>, <code>accuracy</code>, <code>f1</code>,
+<code>precision</code>, <code>recall</code>, and <code>roc_auc</code>. You can use W&amp;B-style names such as
+<code>eval/roc_auc</code> or Hugging Face-style names such as <code>eval_roc_auc</code>; BertNado
+normalizes them for training.</p>
 <h2 id="train-the-best-model">Train the Best Model<a class="headerlink" href="#train-the-best-model" title="Permanent link">&para;</a></h2>
 <div class="highlight"><span class="filename">Train from the best sweep config</span><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bertnado-train<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--output-dir<span class="w"> </span>output/train<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--model-name<span class="w"> </span>PoetschLab/GROVER<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span>--dataset<span class="w"> </span>output/dataset<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span>--best-config-path<span class="w"> </span>output/sweep/best_sweep_config.json<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span>--task-type<span class="w"> </span>regression<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span>--project-name<span class="w"> </span>bertnado
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span>--task-type<span class="w"> </span>binary_classification<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span>--project-name<span class="w"> </span>bertnado<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span>--metric-name<span class="w"> </span>eval/roc_auc<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">  </span>--metric-goal<span class="w"> </span>maximize
 </code></pre></div>
-<p>The trained model is saved under <code>output/train/model</code>.</p>
+<p>The trained model is saved under <code>output/train/model</code>. If <code>best_sweep_config.json</code>
+was produced by <code>bertnado-sweep</code>, the metric flags are optional because the
+resolved metric is already saved in that file. Pass them when you want to
+override the saved metric.</p>
 <h2 id="predict-and-evaluate">Predict and Evaluate<a class="headerlink" href="#predict-and-evaluate" title="Permanent link">&para;</a></h2>
 <div class="highlight"><span class="filename">Predict on the test split</span><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>bertnado-predict<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span>--tokenizer-name<span class="w"> </span>PoetschLab/GROVER<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>--model-dir<span class="w"> </span>output/train/model<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span>--dataset-dir<span class="w"> </span>output/dataset<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span>--output-dir<span class="w"> </span>output/predictions<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span>--task-type<span class="w"> </span>regression
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span>--task-type<span class="w"> </span>binary_classification
 </code></pre></div>
 <p>Prediction outputs include a serialized prediction object and task-specific
 figures.</p>
@@ -818,8 +1144,9 @@ figures.</p>
 <a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span>--model-dir<span class="w"> </span>output/train/model<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span>--dataset-dir<span class="w"> </span>output/dataset<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">  </span>--output-dir<span class="w"> </span>output/feature_analysis<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">  </span>--task-type<span class="w"> </span>regression<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">  </span>--method<span class="w"> </span>both
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">  </span>--task-type<span class="w"> </span>binary_classification<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">  </span>--method<span class="w"> </span>both<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">  </span>--target-class<span class="w"> </span><span class="m">1</span>
 </code></pre></div>
 <p>Use <code>--method shap</code>, <code>--method lig</code>, or <code>--method both</code>. For LIG, <code>--target-class</code>,
 <code>--max-examples</code>, and <code>--n-steps</code> are also available.</p>
