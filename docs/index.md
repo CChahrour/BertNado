@@ -40,6 +40,9 @@ pip install -e ".[dev]"
 The end-to-end workflow prepares genomic regions, runs a sweep, trains the best
 configuration, evaluates predictions, and extracts feature attributions.
 
+BertNado uses Weights & Biases for sweeps and training logs. Run `wandb login`
+locally, or set `WANDB_API_KEY` on servers and CI before starting the sweep.
+
 === "CLI"
 
     ```bash title="1. Prepare the dataset"
@@ -62,6 +65,9 @@ configuration, evaluates predictions, and extracts feature attributions.
       --project-name project \
       --task-type regression
     ```
+
+    `--config-path` is the W&B sweep recipe. The mock path is only an example;
+    use your own JSON config for real experiments.
 
     ```bash title="3. Train the best model"
     bertnado-train \
@@ -112,7 +118,7 @@ configuration, evaluates predictions, and extracts feature attributions.
     )
 
     sweep = run_sweep(
-        config_path="test/data/mock_sweep_config.json",
+        config_path="test/data/mock_sweep_config.json",  # W&B sweep recipe JSON
         output_dir="output/sweep",
         dataset="output/dataset",
         project_name="project",

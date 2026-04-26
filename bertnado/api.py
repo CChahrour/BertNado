@@ -1,7 +1,11 @@
 """Programmatic API for BertNado workflows.
 
-The functions in this module mirror the package's CLI commands while keeping
-Click-specific behavior out of library code.
+This module mirrors BertNado's CLI commands with plain Python functions. Use it
+when you want to run dataset preparation, sweeps, training, evaluation, and
+feature attribution from notebooks, scripts, or larger Python applications.
+
+The heavy workflow dependencies are imported lazily inside each function so
+``import bertnado.api`` stays lightweight.
 """
 
 from __future__ import annotations
@@ -32,9 +36,29 @@ def prepare_dataset(
     tokenizer_name: str = DEFAULT_TOKENIZER_NAME,
     threshold: float = 0.5,
 ) -> Any:
-    """Prepare and tokenize a chromosome-aware dataset split.
+    """Prepare and tokenize a chromosome-aware dataset.
 
-    Parameters match the ``bertnado-data`` CLI command.
+    This is the Python equivalent of the ``bertnado-data`` CLI command. It
+    reads the input target table, extracts DNA sequences from the FASTA file,
+    creates chromosome-aware train/validation/test splits, tokenizes the
+    sequences, and writes the prepared dataset to ``output_dir``.
+
+    :param file_path: Path to the input Parquet file containing genomic regions
+        and target values.
+    :param target_column: Name of the column in ``file_path`` to use as the
+        prediction target.
+    :param fasta_file: Path to the genome FASTA file used to extract sequences.
+    :param output_dir: Directory where the prepared dataset should be written.
+    :param task_type: Learning task. Must be ``"binary_classification"``,
+        ``"multilabel_classification"``, or ``"regression"``.
+    :param tokenizer_name: Hugging Face tokenizer name or local tokenizer path.
+        Defaults to ``"PoetschLab/GROVER"``.
+    :param threshold: Decision threshold used when converting targets for
+        binary classification. Defaults to ``0.5``.
+    :returns: The value returned by
+        :meth:`bertnado.data.prepare_dataset.DatasetPreparer.prepare`.
+    :raises ValueError: If ``task_type`` is not one of BertNado's supported task
+        types.
     """
     _validate_task_type(task_type)
 
@@ -61,10 +85,31 @@ def run_sweep(
     model_name: str = DEFAULT_MODEL_NAME,
     sweep_count: int = 10,
 ) -> dict[str, Any]:
-    """Run a W&B sweep and save the best run config.
+    """Run a W&B hyperparameter sweep and save the best run config.
 
-    Returns metadata about the sweep, including the path to
-    ``best_sweep_config.json``.
+    This is the Python equivalent of the ``bertnado-sweep`` CLI command. It
+    loads a W&B sweep configuration, creates a sweep, runs ``sweep_count``
+    trials, selects the best run using the configured metric, and writes that
+    run's configuration to ``best_sweep_config.json`` in ``output_dir``.
+
+    :param config_path: Path to the W&B sweep configuration JSON file. The file
+        must include a ``metric`` object with ``name`` and ``goal`` fields.
+    :param output_dir: Directory where ``best_sweep_config.json`` should be
+        saved.
+    :param dataset: Path to a dataset prepared by :func:`prepare_dataset`.
+    :param project_name: W&B project name used for sweep creation and run
+        lookup.
+    :param task_type: Learning task. Must be ``"binary_classification"``,
+        ``"multilabel_classification"``, or ``"regression"``.
+    :param model_name: Hugging Face model name or local model path. Defaults to
+        ``"PoetschLab/GROVER"``.
+    :param sweep_count: Number of W&B agent trials to run. Defaults to ``10``.
+    :returns: Sweep metadata with ``sweep_id``, ``best_run_id``,
+        ``metric_name``, ``metric_value``, ``best_config``, and
+        ``best_config_path``.
+    :raises ValueError: If ``task_type`` is not one of BertNado's supported task
+        types.
+    :raises RuntimeError: If the sweep completes without any recorded runs.
     """
     _validate_task_type(task_type)
     output_path = Path(output_dir)
@@ -137,7 +182,31 @@ def train_model(
     model_name: str = DEFAULT_MODEL_NAME,
     pos_weight: float | list[float] | None = None,
 ) -> Any:
-    """Train a model from a saved best sweep configuration."""
+    """Train a final model from a saved sweep configuration.
+
+    This is the Python equivalent of the ``bertnado-train`` CLI command. It
+    loads the best hyperparameter configuration from ``best_config_path``, trains
+    the selected model on the prepared dataset, and writes model artifacts to
+    ``output_dir``.
+
+    :param output_dir: Directory where training artifacts and the final model
+        should be saved.
+    :param dataset: Path to a dataset prepared by :func:`prepare_dataset`.
+    :param best_config_path: Path to ``best_sweep_config.json`` from
+        :func:`run_sweep`.
+    :param project_name: W&B project name used for training run logging.
+    :param task_type: Learning task. Must be ``"binary_classification"``,
+        ``"multilabel_classification"``, or ``"regression"``.
+    :param model_name: Hugging Face model name or local model path. Defaults to
+        ``"PoetschLab/GROVER"``.
+    :param pos_weight: Optional positive-class weight for imbalanced
+        classification. Pass a scalar, a list of per-class weights, or a
+        tensor-like object with a ``to`` method. Ignored by regression tasks.
+    :returns: The value returned by
+        :meth:`bertnado.training.full_train.FullTrainer.train`.
+    :raises ValueError: If ``task_type`` is not one of BertNado's supported task
+        types.
+    """
     _validate_task_type(task_type)
 
     from bertnado.training.full_train import FullTrainer
@@ -161,7 +230,29 @@ def predict_and_evaluate(
     tokenizer_name: str = DEFAULT_TOKENIZER_NAME,
     threshold: float = 0.5,
 ) -> Any:
-    """Run prediction on the test split and write evaluation outputs."""
+    """Run prediction on the test split and write evaluation outputs.
+
+    This is the Python equivalent of the ``bertnado-predict`` CLI command. It
+    loads a trained model, evaluates it against the prepared dataset's test
+    split, and writes prediction/evaluation artifacts such as metrics and plots
+    to ``output_dir``.
+
+    :param model_dir: Directory containing the trained BertNado model.
+    :param dataset_dir: Directory containing a dataset prepared by
+        :func:`prepare_dataset`.
+    :param output_dir: Directory where predictions, metrics, and figures should
+        be saved.
+    :param task_type: Learning task. Must be ``"binary_classification"``,
+        ``"multilabel_classification"``, or ``"regression"``.
+    :param tokenizer_name: Hugging Face tokenizer name or local tokenizer path.
+        Defaults to ``"PoetschLab/GROVER"``.
+    :param threshold: Decision threshold used for binary or multilabel
+        classification predictions. Defaults to ``0.5``.
+    :returns: The value returned by
+        :meth:`bertnado.evaluation.predict.Evaluator.evaluate`.
+    :raises ValueError: If ``task_type`` is not one of BertNado's supported task
+        types.
+    """
     _validate_task_type(task_type)
 
     from bertnado.evaluation.predict import Evaluator
@@ -188,7 +279,33 @@ def extract_features(
     max_examples: int | None = None,
     n_steps: int = 50,
 ) -> Any:
-    """Run SHAP, LIG, or both feature-attribution methods."""
+    """Run SHAP, LIG, or both feature-attribution methods.
+
+    This is the Python equivalent of the ``bertnado-feature`` CLI command. It
+    loads a trained model and prepared dataset, computes attribution scores with
+    SHAP, Layer Integrated Gradients (LIG), or both, and writes the analysis
+    outputs to ``output_dir``.
+
+    :param model_dir: Directory containing the trained BertNado model.
+    :param dataset_dir: Directory containing a dataset prepared by
+        :func:`prepare_dataset`.
+    :param output_dir: Directory where feature-attribution outputs should be
+        saved.
+    :param task_type: Learning task. Must be ``"binary_classification"``,
+        ``"multilabel_classification"``, or ``"regression"``.
+    :param tokenizer_name: Hugging Face tokenizer name or local tokenizer path.
+        Defaults to ``"PoetschLab/GROVER"``.
+    :param method: Attribution method to run. Must be ``"shap"``, ``"lig"``, or
+        ``"both"``. Defaults to ``"lig"``.
+    :param target_class: Class index to explain for classification tasks.
+        Defaults to ``1``.
+    :param max_examples: Optional maximum number of examples to process. Use
+        ``None`` to process the implementation default.
+    :param n_steps: Number of integration steps for LIG. Defaults to ``50``.
+    :returns: The value returned by
+        :meth:`bertnado.evaluation.feature_extraction.Attributer.extract`.
+    :raises ValueError: If ``task_type`` or ``method`` is not supported.
+    """
     _validate_task_type(task_type)
     _validate_feature_method(method)
 
@@ -219,7 +336,31 @@ def analyze_features(
     max_examples: int | None = None,
     n_steps: int = 50,
 ) -> Any:
-    """Alias for :func:`extract_features` using the CLI wording."""
+    """Run feature attribution using the CLI-style function name.
+
+    This convenience wrapper calls :func:`extract_features` with the same
+    arguments. It exists for users who prefer the ``feature analysis`` wording
+    from the CLI.
+
+    :param model_dir: Directory containing the trained BertNado model.
+    :param dataset_dir: Directory containing a dataset prepared by
+        :func:`prepare_dataset`.
+    :param output_dir: Directory where feature-attribution outputs should be
+        saved.
+    :param task_type: Learning task. Must be ``"binary_classification"``,
+        ``"multilabel_classification"``, or ``"regression"``.
+    :param tokenizer_name: Hugging Face tokenizer name or local tokenizer path.
+        Defaults to ``"PoetschLab/GROVER"``.
+    :param method: Attribution method to run. Must be ``"shap"``, ``"lig"``, or
+        ``"both"``. Defaults to ``"lig"``.
+    :param target_class: Class index to explain for classification tasks.
+        Defaults to ``1``.
+    :param max_examples: Optional maximum number of examples to process. Use
+        ``None`` to process the implementation default.
+    :param n_steps: Number of integration steps for LIG. Defaults to ``50``.
+    :returns: The value returned by :func:`extract_features`.
+    :raises ValueError: If ``task_type`` or ``method`` is not supported.
+    """
     return extract_features(
         model_dir=model_dir,
         dataset_dir=dataset_dir,

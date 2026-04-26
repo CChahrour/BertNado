@@ -40,6 +40,28 @@ bertnado-data \
   --threshold 0.5
 ```
 
+## Weights & Biases Setup
+
+BertNado uses Weights & Biases for sweeps and experiment logging. Before running
+`bertnado-sweep` or `bertnado-train`, make sure W&B can authenticate from the
+machine where the command will run.
+
+For local interactive use, log in once:
+
+```bash title="Log in to W&B"
+wandb login
+```
+
+For non-interactive environments such as CI, servers, or cluster jobs, set the
+API key as an environment variable instead:
+
+```bash title="Set W&B credentials"
+export WANDB_API_KEY="your-api-key"
+```
+
+Do not commit W&B API keys to the repository. The `--project-name` option tells
+BertNado which W&B project should receive the sweep and training runs.
+
 ## Run a Sweep
 
 ```bash title="Run a W&B sweep"
@@ -55,6 +77,52 @@ bertnado-sweep \
 
 The best run configuration is written to
 `output/sweep/best_sweep_config.json`.
+
+### Sweep Config File
+
+`--config-path` points to a JSON file that describes the Weights & Biases sweep.
+The example path `test/data/mock_sweep_config.json` is a small test/demo config;
+for real training, create your own file and pass its path instead.
+
+The file controls which metric to optimize and which hyperparameters BertNado
+should sample for each sweep run. Common BertNado training parameters include
+`learning_rate`, `per_device_train_batch_size`, `per_device_eval_batch_size`,
+`epochs`, `weight_decay`, and `logging_steps`.
+
+```json title="sweep_config.json"
+{
+  "method": "bayes",
+  "metric": {
+    "name": "eval_loss",
+    "goal": "minimize"
+  },
+  "parameters": {
+    "learning_rate": {
+      "distribution": "log_uniform_values",
+      "min": 0.000001,
+      "max": 0.00005
+    },
+    "per_device_train_batch_size": {
+      "values": [4, 8]
+    },
+    "per_device_eval_batch_size": {
+      "value": 8
+    },
+    "epochs": {
+      "values": [3, 5]
+    },
+    "weight_decay": {
+      "values": [0.0, 0.01]
+    },
+    "logging_steps": {
+      "value": 10
+    }
+  }
+}
+```
+
+BertNado accepts fixed values with `value`, discrete choices with `values`, and
+the `uniform`, `int_uniform`, or `log_uniform_values` distributions.
 
 ## Train the Best Model
 

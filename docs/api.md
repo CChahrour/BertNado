@@ -9,6 +9,14 @@ This script runs the full BertNado workflow from Python: dataset preparation,
 hyperparameter sweep, final training, prediction, evaluation, and feature
 attribution.
 
+The `config_path` argument in the sweep step points to a Weights & Biases sweep
+configuration JSON file. The mock path below is just an example; see the
+[CLI sweep config section](cli.md#sweep-config-file) for a complete template.
+
+BertNado logs sweeps and training runs to Weights & Biases. Run `wandb login`
+once on local machines, or set `WANDB_API_KEY` in non-interactive environments
+before calling `run_sweep` or `train_model`.
+
 ```python title="api_full_workflow.py"
 from pathlib import Path
 
@@ -125,6 +133,9 @@ if __name__ == "__main__":
         sweep_count=10,
     )
     ```
+
+    `config_path` is the sweep recipe, not input data. It tells BertNado which
+    metric to optimize and which hyperparameters to sample.
 
 === "Train"
 
