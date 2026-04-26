@@ -2,9 +2,7 @@ import os
 import pickle
 
 import matplotlib.pyplot as plt
-import numpy as np
 import seaborn as sns
-import torch
 from datasets import load_from_disk
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from scipy.special import expit

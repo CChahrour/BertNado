@@ -1,0 +1,51 @@
+name: Documentation
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - uses: astral-sh/setup-uv@v8
+        with:
+          enable-cache: true
+
+      - id: cache-id
+        run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        with:
+          key: mkdocs-material-${{ steps.cache-id.outputs.cache_id }}
+          path: .cache
+          restore-keys: |
+            mkdocs-material-
+
+      - name: Install OS dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc git cmake make libtool g++ perl coreutils \
+            libcurl4-openssl-dev libbz2-dev liblzma-dev zlib1g-dev
+
+      - name: Sync dependencies
+        run: uv sync --extra dev
+
+      - name: Build and deploy
+        env:
+          NO_MKDOCS_2_WARNING: "1"
+        run: |
+          uv run mkdocs build --strict
+          uv run mkdocs gh-deploy --force --clean

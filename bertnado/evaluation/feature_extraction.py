@@ -1,8 +1,6 @@
 import os
 import pickle
 
-import matplotlib.pyplot as plt
-import numpy as np
 import shap
 import torch
 from tqdm import tqdm

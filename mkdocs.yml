@@ -1,0 +1,58 @@
+site_name: BertNado
+site_description: Fine-tune and evaluate transformer-based DNA language models.
+site_url: https://cchahrour.github.io/BertNado/
+repo_url: https://github.com/CChahrour/BertNado
+repo_name: CChahrour/BertNado
+
+theme:
+  name: material
+  logo: assets/bertnado.png
+  favicon: assets/bertnado.png
+  palette:
+    - scheme: default
+      primary: pink
+      accent: pink
+  features:
+    - navigation.sections
+    - navigation.tabs
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - CLI: cli.md
+  - API: api.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: sphinx
+            members_order: source
+            separate_signature: false
+            show_root_heading: true
+            show_source: false
+            show_signature_annotations: true
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra_css:
+  - stylesheets/extra.css

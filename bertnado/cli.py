@@ -119,6 +119,8 @@ def run_sweep_cli(
     config_path, output_dir, model_name, dataset, sweep_count, project_name, task_type
 ):
     """Run hyperparameter sweep."""
+    os.makedirs(output_dir, exist_ok=True)
+
     with open(config_path, "r") as config_file:
         sweep_config = json.load(config_file)
     sweep_config["name"] = (

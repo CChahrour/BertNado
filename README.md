@@ -1,25 +1,29 @@
-# 🌪️ BertNado
+# BertNado
+
+<p align="center">
+  <img src="docs/assets/bertnado.png" alt="QuantNado logo" width="192">
+</p>
 
 BertNado is a modular framework for fine-tuning Hugging Face DNA language models such as GROVER, NT2, and DNABERT variants on genomic prediction tasks. It supports both full fine-tuning and parameter-efficient transfer learning (PEFT) strategies like LoRA.
 
 ---
 
-## 🔧 Features
+## Features
 
-- ✅ Model Support: GROVER, NT2 (Nucleotide Transformer), DNABERT, and other Hugging Face-compatible DNA language models
-- 🧬 Task Flexibility: Supports regression, binary, and multi-label classification, as well as masked DNA modeling
-- 🧪 Chromosome-aware Splits: Train/val/test split by chromosome to prevent data leakage
-- ⚡ Efficient Fine-tuning: Drop-in support for parameter-efficient tuning methods like LoRA
-- 🎯 Hyperparameter Optimization: Integrated with Weights & Biases for Bayesian sweep-based tuning
-- 📊 Robust Evaluation: Automatically generates R², ROC, PR, and confusion matrix plots
-- 🧠 Model Interpretation: SHAP and Captum Layer Integrated Gradients (LIG) for biological insight
-- 🧰 Trainer Integration: Built on Hugging Face Trainer with custom heads and metrics
-- 📈 W&B Logging: Full experiment tracking with Weights & Biases out of the box
+- Model Support: GROVER, NT2 (Nucleotide Transformer), DNABERT, and other Hugging Face-compatible DNA language models
+- Task Flexibility: Supports regression, binary, and multi-label classification, as well as masked DNA modeling
+- Chromosome-aware Splits: Train/val/test split by chromosome to prevent data leakage
+- Efficient Fine-tuning: Drop-in support for parameter-efficient tuning methods like LoRA
+- Hyperparameter Optimization: Integrated with Weights & Biases for Bayesian sweep-based tuning
+- Robust Evaluation: Automatically generates R², ROC, PR, and confusion matrix plots
+- Model Interpretation: SHAP and Captum Layer Integrated Gradients (LIG) for biological insight
+- Trainer Integration: Built on Hugging Face Trainer with custom heads and metrics
+- W&B Logging: Full experiment tracking with Weights & Biases out of the box
 
 
 ---
 
-## 📦 Installation
+## Installation
 
 ```bash
 git clone https://github.com/CChahrour/BertNado.git
@@ -29,7 +33,7 @@ pip install -e .
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 bertnado/
@@ -50,7 +54,7 @@ bertnado/
 
 ---
 
-## 🚀 Quickstart
+## Quickstart
 
 ### Step 1: Prepare Dataset
 
@@ -128,31 +132,31 @@ Run both SHAP and LIG:
 
 ---
 
-## 📈 Outputs
+## Outputs
 
-- 📊 **Figures** saved to `output/figures/`
+- **Figures** saved to `output/figures/`
   - Regression: R² scatter plot
   - Classification: ROC & PR curves
   - Binary: Confusion matrix
 
-- 📉 **SHAP scores** saved to `output/shap/`
-- 📦 **Trained models** saved to `output/models/`
+- **SHAP scores** saved to `output/shap/`
+- **Trained models** saved to `output/models/`
 
 ---
 
-## 🧠 Interpretation Tools
+## Interpretation Tools
 
 - **SHAP**: Global and local token importance
 - **Captum LIG**: Gradient-based token attribution at the embedding level
 
 ---
 
-## 🧠 Acknowledgements
+## Acknowledgements
 
-- 🤗 Hugging Face Transformers
-- 🧬 PoetschLab/GROVER
-- 📉 PEFT/LoRA 
-- 🧠 SHAP & Captum for interpretability
-- 🧬 `crested` for efficient sequence extraction
+- Hugging Face Transformers
+- PoetschLab/GROVER
+- PEFT/LoRA 
+- SHAP & Captum for interpretability
+- `crested` for efficient sequence extraction
 
 ---

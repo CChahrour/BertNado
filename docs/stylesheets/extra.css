@@ -1,0 +1,89 @@
+:root {
+  --md-primary-fg-color: #c2185b;
+  --md-primary-fg-color--light: #ec407a;
+  --md-primary-fg-color--dark: #880e4f;
+  --md-accent-fg-color: #d81b60;
+}
+
+[data-md-color-scheme="default"] {
+  --md-typeset-a-color: #ad1457;
+}
+
+.md-header,
+.md-tabs {
+  background: linear-gradient(135deg, #9c1557 0%, #d81b60 55%, #ff4f9a 100%);
+}
+
+.md-typeset .hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  gap: 2rem;
+  align-items: center;
+  padding: 2rem 0 1rem;
+}
+
+.md-typeset .hero img {
+  max-width: 160px;
+  justify-self: end;
+}
+
+.md-typeset .hero h1 {
+  margin-bottom: 0.35rem;
+  color: #8a124b;
+  font-weight: 800;
+}
+
+.md-typeset .hero p {
+  font-size: 1.05rem;
+  margin-bottom: 0;
+}
+
+.md-typeset .workflow-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.md-typeset .workflow-card {
+  border: 1px solid rgba(194, 24, 91, 0.2);
+  border-radius: 0.4rem;
+  padding: 1rem;
+  background: rgba(255, 245, 250, 0.65);
+}
+
+.md-typeset .workflow-card h3 {
+  margin-top: 0;
+}
+
+.md-typeset div.highlight {
+  border: 1px solid rgba(194, 24, 91, 0.16);
+  border-radius: 0.4rem;
+}
+
+.md-typeset div.highlight,
+.md-typeset .highlighttable {
+  margin: 0.8rem 0 1.1rem;
+}
+
+.md-typeset .highlight span.filename {
+  border-bottom: 1px solid rgba(194, 24, 91, 0.16);
+  color: #8a124b;
+  font-weight: 700;
+}
+
+.md-typeset .tabbed-set {
+  margin: 1rem 0 1.4rem;
+}
+
+@media screen and (max-width: 44rem) {
+  .md-typeset .hero {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .md-typeset .hero img {
+    justify-self: start;
+    max-width: 120px;
+  }
+}

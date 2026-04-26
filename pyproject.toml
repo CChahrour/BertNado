@@ -12,8 +12,8 @@ authors = [
     {name = "Catherine Chahrour", email = "catherine.chahrour@msdtc.ox.ac.uk"}]
 description = "BertNado: A framework for training and evaluating transformer-based models for Chromatin binding"
 readme = "README.md"
-requires-python = ">=3.11"
-license = {text = "GNU GENERAL PUBLIC LICENSE Version 3"}
+requires-python = ">=3.12"
+license = "GPL-3.0-only"
 dynamic = ["version"]
 
 dependencies = [
@@ -27,13 +27,26 @@ dependencies = [
     "modisco-lite==2.3.2",
     "pandas==2.1.4",
     "peft==0.15.1",
-    "pytest==8.3.5",
     "scikit-learn==1.5.2",
     "seaborn==0.13.2",
     "shap==0.47.1",
     "torch==2.5.1",
     "transformers==4.51.0",
     "wandb==0.19.9"
+]
+
+[project.optional-dependencies]
+dev = [
+    "mkdocs-material==9.7.4",
+    "mkdocs>=1.6,<2.0",
+    "mkdocs-jupyter==0.25.1",
+    "mkdocstrings-python==2.0.3",
+    "mkdocstrings==1.0.3",
+    "pymdown-extensions==10.21",
+    "pytest==9.0.2",
+    "pytest-cov==7.0.0",
+    "pytest-xdist>=3.0",
+    "ruff==0.15.4",
 ]
 
 [project.scripts]
@@ -48,8 +61,8 @@ bertnado-feature = "bertnado.cli:feature_analysis_cli"
 write_to = "bertnado/_version.py"
 local_scheme = "no-local-version"
 
-[tool.setuptools]
-packages = ["bertnado"]
+[tool.setuptools.packages.find]
+include = ["bertnado*"]
 
 [project.urls]
 Homepage = "https://github.com/CChahrour/BertNado"
