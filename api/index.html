@@ -732,6 +732,12 @@ workflows exposed by the CLI.</p>
 <p>This script runs the full BertNado workflow from Python: dataset preparation,
 hyperparameter sweep, final training, prediction, evaluation, and feature
 attribution.</p>
+<p>The <code>config_path</code> argument in the sweep step points to a Weights &amp; Biases sweep
+configuration JSON file. The mock path below is just an example; see the
+<a href="../cli/#sweep-config-file">CLI sweep config section</a> for a complete template.</p>
+<p>BertNado logs sweeps and training runs to Weights &amp; Biases. Run <code>wandb login</code>
+once on local machines, or set <code>WANDB_API_KEY</code> in non-interactive environments
+before calling <code>run_sweep</code> or <code>train_model</code>.</p>
 <div class="highlight"><span class="filename">api_full_workflow.py</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">bertnado.api</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -841,6 +847,8 @@ attribution.</p>
 <a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">sweep_count</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
 <a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="p">)</span>
 </code></pre></div>
+<p><code>config_path</code> is the sweep recipe, not input data. It tells BertNado which
+metric to optimize and which hyperparameters to sample.</p>
 </div>
 <div class="tabbed-block">
 <div class="highlight"><span class="filename">Train the final model</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">train_model</span><span class="p">(</span>
@@ -923,8 +931,11 @@ attribution.</p>
     <div class="doc doc-contents first">
 
         <p>Programmatic API for BertNado workflows.</p>
-<p>The functions in this module mirror the package's CLI commands while keeping
-Click-specific behavior out of library code.</p>
+<p>This module mirrors BertNado's CLI commands with plain Python functions. Use it
+when you want to run dataset preparation, sweeps, training, evaluation, and
+feature attribution from notebooks, scripts, or larger Python applications.</p>
+<p>The heavy workflow dependencies are imported lazily inside each function so
+<code>import bertnado.api</code> stays lightweight.</p>
 
 
 
@@ -957,8 +968,191 @@ Click-specific behavior out of library code.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Prepare and tokenize a chromosome-aware dataset split.</p>
-<p>Parameters match the <code>bertnado-data</code> CLI command.</p>
+        <p>Prepare and tokenize a chromosome-aware dataset.</p>
+<p>This is the Python equivalent of the <code>bertnado-data</code> CLI command. It
+reads the input target table, extracts DNA sequences from the FASTA file,
+creates chromosome-aware train/validation/test splits, tokenizes the
+sequences, and writes the prepared dataset to <code>output_dir</code>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>file_path</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Path to the input Parquet file containing genomic regions
+and target values.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>target_column</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Name of the column in <code>file_path</code> to use as the
+prediction target.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>fasta_file</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Path to the genome FASTA file used to extract sequences.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>output_dir</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Directory where the prepared dataset should be written.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>task_type</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.TaskType">TaskType</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Learning task. Must be <code>"binary_classification"</code>,
+<code>"multilabel_classification"</code>, or <code>"regression"</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>tokenizer_name</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Hugging Face tokenizer name or local tokenizer path.
+Defaults to <code>"PoetschLab/GROVER"</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.DEFAULT_TOKENIZER_NAME">DEFAULT_TOKENIZER_NAME</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>threshold</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Decision threshold used when converting targets for
+binary classification. Defaults to <code>0.5</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>0.5</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Any">Any</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The value returned by
+:meth:<code>bertnado.data.prepare_dataset.DatasetPreparer.prepare</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>ValueError</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If <code>task_type</code> is not one of BertNado's supported task
+types.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
@@ -976,9 +1170,202 @@ Click-specific behavior out of library code.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Run a W&amp;B sweep and save the best run config.</p>
-<p>Returns metadata about the sweep, including the path to
-<code>best_sweep_config.json</code>.</p>
+        <p>Run a W&amp;B hyperparameter sweep and save the best run config.</p>
+<p>This is the Python equivalent of the <code>bertnado-sweep</code> CLI command. It
+loads a W&amp;B sweep configuration, creates a sweep, runs <code>sweep_count</code>
+trials, selects the best run using the configured metric, and writes that
+run's configuration to <code>best_sweep_config.json</code> in <code>output_dir</code>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>config_path</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Path to the W&amp;B sweep configuration JSON file. The file
+must include a <code>metric</code> object with <code>name</code> and <code>goal</code> fields.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>output_dir</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Directory where <code>best_sweep_config.json</code> should be
+saved.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>dataset</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Path to a dataset prepared by :func:<code>prepare_dataset</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>project_name</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>W&amp;B project name used for sweep creation and run
+lookup.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>task_type</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.TaskType">TaskType</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Learning task. Must be <code>"binary_classification"</code>,
+<code>"multilabel_classification"</code>, or <code>"regression"</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>model_name</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Hugging Face model name or local model path. Defaults to
+<code>"PoetschLab/GROVER"</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.DEFAULT_MODEL_NAME">DEFAULT_MODEL_NAME</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>sweep_count</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of W&amp;B agent trials to run. Defaults to <code>10</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>10</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Sweep metadata with <code>sweep_id</code>, <code>best_run_id</code>,
+<code>metric_name</code>, <code>metric_value</code>, <code>best_config</code>, and
+<code>best_config_path</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>ValueError</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If <code>task_type</code> is not one of BertNado's supported task
+types.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code>RuntimeError</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If the sweep completes without any recorded runs.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
@@ -996,7 +1383,192 @@ Click-specific behavior out of library code.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Train a model from a saved best sweep configuration.</p>
+        <p>Train a final model from a saved sweep configuration.</p>
+<p>This is the Python equivalent of the <code>bertnado-train</code> CLI command. It
+loads the best hyperparameter configuration from <code>best_config_path</code>, trains
+the selected model on the prepared dataset, and writes model artifacts to
+<code>output_dir</code>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>output_dir</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Directory where training artifacts and the final model
+should be saved.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>dataset</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Path to a dataset prepared by :func:<code>prepare_dataset</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>best_config_path</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Path to <code>best_sweep_config.json</code> from
+:func:<code>run_sweep</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>project_name</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>W&amp;B project name used for training run logging.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>task_type</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.TaskType">TaskType</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Learning task. Must be <code>"binary_classification"</code>,
+<code>"multilabel_classification"</code>, or <code>"regression"</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>model_name</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Hugging Face model name or local model path. Defaults to
+<code>"PoetschLab/GROVER"</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.DEFAULT_MODEL_NAME">DEFAULT_MODEL_NAME</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>pos_weight</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span> | <span title="list">list</span>[<span title="float">float</span>] | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional positive-class weight for imbalanced
+classification. Pass a scalar, a list of per-class weights, or a
+tensor-like object with a <code>to</code> method. Ignored by regression tasks.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Any">Any</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The value returned by
+:meth:<code>bertnado.training.full_train.FullTrainer.train</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>ValueError</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If <code>task_type</code> is not one of BertNado's supported task
+types.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
@@ -1015,6 +1587,174 @@ Click-specific behavior out of library code.</p>
     <div class="doc doc-contents ">
 
         <p>Run prediction on the test split and write evaluation outputs.</p>
+<p>This is the Python equivalent of the <code>bertnado-predict</code> CLI command. It
+loads a trained model, evaluates it against the prepared dataset's test
+split, and writes prediction/evaluation artifacts such as metrics and plots
+to <code>output_dir</code>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>model_dir</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Directory containing the trained BertNado model.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>dataset_dir</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Directory containing a dataset prepared by
+:func:<code>prepare_dataset</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>output_dir</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Directory where predictions, metrics, and figures should
+be saved.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>task_type</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.TaskType">TaskType</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Learning task. Must be <code>"binary_classification"</code>,
+<code>"multilabel_classification"</code>, or <code>"regression"</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>tokenizer_name</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Hugging Face tokenizer name or local tokenizer path.
+Defaults to <code>"PoetschLab/GROVER"</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.DEFAULT_TOKENIZER_NAME">DEFAULT_TOKENIZER_NAME</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>threshold</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Decision threshold used for binary or multilabel
+classification predictions. Defaults to <code>0.5</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>0.5</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Any">Any</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The value returned by
+:meth:<code>bertnado.evaluation.predict.Evaluator.evaluate</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>ValueError</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If <code>task_type</code> is not one of BertNado's supported task
+types.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
@@ -1033,6 +1773,223 @@ Click-specific behavior out of library code.</p>
     <div class="doc doc-contents ">
 
         <p>Run SHAP, LIG, or both feature-attribution methods.</p>
+<p>This is the Python equivalent of the <code>bertnado-feature</code> CLI command. It
+loads a trained model and prepared dataset, computes attribution scores with
+SHAP, Layer Integrated Gradients (LIG), or both, and writes the analysis
+outputs to <code>output_dir</code>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>model_dir</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Directory containing the trained BertNado model.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>dataset_dir</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Directory containing a dataset prepared by
+:func:<code>prepare_dataset</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>output_dir</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Directory where feature-attribution outputs should be
+saved.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>task_type</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.TaskType">TaskType</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Learning task. Must be <code>"binary_classification"</code>,
+<code>"multilabel_classification"</code>, or <code>"regression"</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>tokenizer_name</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Hugging Face tokenizer name or local tokenizer path.
+Defaults to <code>"PoetschLab/GROVER"</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.DEFAULT_TOKENIZER_NAME">DEFAULT_TOKENIZER_NAME</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>method</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.FeatureMethod">FeatureMethod</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Attribution method to run. Must be <code>"shap"</code>, <code>"lig"</code>, or
+<code>"both"</code>. Defaults to <code>"lig"</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;lig&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>target_class</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Class index to explain for classification tasks.
+Defaults to <code>1</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>1</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>max_examples</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional maximum number of examples to process. Use
+<code>None</code> to process the implementation default.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>n_steps</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of integration steps for LIG. Defaults to <code>50</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>50</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Any">Any</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The value returned by
+:meth:<code>bertnado.evaluation.feature_extraction.Attributer.extract</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>ValueError</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If <code>task_type</code> or <code>method</code> is not supported.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
@@ -1050,7 +2007,222 @@ Click-specific behavior out of library code.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Alias for :func:<code>extract_features</code> using the CLI wording.</p>
+        <p>Run feature attribution using the CLI-style function name.</p>
+<p>This convenience wrapper calls :func:<code>extract_features</code> with the same
+arguments. It exists for users who prefer the <code>feature analysis</code> wording
+from the CLI.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>model_dir</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Directory containing the trained BertNado model.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>dataset_dir</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Directory containing a dataset prepared by
+:func:<code>prepare_dataset</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>output_dir</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.PathLike">PathLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Directory where feature-attribution outputs should be
+saved.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>task_type</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.TaskType">TaskType</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Learning task. Must be <code>"binary_classification"</code>,
+<code>"multilabel_classification"</code>, or <code>"regression"</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>tokenizer_name</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Hugging Face tokenizer name or local tokenizer path.
+Defaults to <code>"PoetschLab/GROVER"</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.DEFAULT_TOKENIZER_NAME">DEFAULT_TOKENIZER_NAME</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>method</code>
+            </td>
+            <td>
+                  <code><span title="bertnado.api.FeatureMethod">FeatureMethod</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Attribution method to run. Must be <code>"shap"</code>, <code>"lig"</code>, or
+<code>"both"</code>. Defaults to <code>"lig"</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;lig&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>target_class</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Class index to explain for classification tasks.
+Defaults to <code>1</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>1</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>max_examples</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional maximum number of examples to process. Use
+<code>None</code> to process the implementation default.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>n_steps</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of integration steps for LIG. Defaults to <code>50</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>50</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Any">Any</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The value returned by :func:<code>extract_features</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>ValueError</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If <code>task_type</code> or <code>method</code> is not supported.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>

@@ -667,6 +667,8 @@ strategies such as LoRA.</p>
 <h2 id="quickstart">Quickstart<a class="headerlink" href="#quickstart" title="Permanent link">&para;</a></h2>
 <p>The end-to-end workflow prepares genomic regions, runs a sweep, trains the best
 configuration, evaluates predictions, and extracts feature attributions.</p>
+<p>BertNado uses Weights &amp; Biases for sweeps and training logs. Run <code>wandb login</code>
+locally, or set <code>WANDB_API_KEY</code> on servers and CI before starting the sweep.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">CLI</label><label for="__tabbed_1_2">Python API</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
@@ -687,6 +689,8 @@ configuration, evaluates predictions, and extracts feature attributions.</p>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span>--project-name<span class="w"> </span>project<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span>--task-type<span class="w"> </span>regression
 </code></pre></div>
+<p><code>--config-path</code> is the W&amp;B sweep recipe. The mock path is only an example;
+use your own JSON config for real experiments.</p>
 <div class="highlight"><span class="filename">3. Train the best model</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bertnado-train<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--output-dir<span class="w"> </span>output/train<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--model-name<span class="w"> </span>PoetschLab/GROVER<span class="w"> </span><span class="se">\</span>
@@ -729,7 +733,7 @@ configuration, evaluates predictions, and extracts feature attributions.</p>
 <a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="p">)</span>
 <a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>
 <a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="n">sweep</span> <span class="o">=</span> <span class="n">run_sweep</span><span class="p">(</span>
-<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>    <span class="n">config_path</span><span class="o">=</span><span class="s2">&quot;test/data/mock_sweep_config.json&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>    <span class="n">config_path</span><span class="o">=</span><span class="s2">&quot;test/data/mock_sweep_config.json&quot;</span><span class="p">,</span>  <span class="c1"># W&amp;B sweep recipe JSON</span>
 <a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>    <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;output/sweep&quot;</span><span class="p">,</span>
 <a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>    <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;output/dataset&quot;</span><span class="p">,</span>
 <a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>    <span class="n">project_name</span><span class="o">=</span><span class="s2">&quot;project&quot;</span><span class="p">,</span>

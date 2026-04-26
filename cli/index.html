@@ -427,6 +427,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#weights-biases-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Weights &amp; Biases Setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#run-a-sweep" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -434,6 +445,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Run a Sweep">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sweep-config-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sweep Config File
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -554,6 +582,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#weights-biases-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Weights &amp; Biases Setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#run-a-sweep" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -561,6 +600,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Run a Sweep">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sweep-config-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sweep Config File
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -671,46 +727,99 @@ the quickstart and can be chained into a full training and evaluation run.</p>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span>--task-type<span class="w"> </span>binary_classification<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span>--threshold<span class="w"> </span><span class="m">0</span>.5
 </code></pre></div>
+<h2 id="weights-biases-setup">Weights &amp; Biases Setup<a class="headerlink" href="#weights-biases-setup" title="Permanent link">&para;</a></h2>
+<p>BertNado uses Weights &amp; Biases for sweeps and experiment logging. Before running
+<code>bertnado-sweep</code> or <code>bertnado-train</code>, make sure W&amp;B can authenticate from the
+machine where the command will run.</p>
+<p>For local interactive use, log in once:</p>
+<div class="highlight"><span class="filename">Log in to W&amp;B</span><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>wandb<span class="w"> </span>login
+</code></pre></div>
+<p>For non-interactive environments such as CI, servers, or cluster jobs, set the
+API key as an environment variable instead:</p>
+<div class="highlight"><span class="filename">Set W&amp;B credentials</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">WANDB_API_KEY</span><span class="o">=</span><span class="s2">&quot;your-api-key&quot;</span>
+</code></pre></div>
+<p>Do not commit W&amp;B API keys to the repository. The <code>--project-name</code> option tells
+BertNado which W&amp;B project should receive the sweep and training runs.</p>
 <h2 id="run-a-sweep">Run a Sweep<a class="headerlink" href="#run-a-sweep" title="Permanent link">&para;</a></h2>
-<div class="highlight"><span class="filename">Run a W&amp;B sweep</span><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bertnado-sweep<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>--config-path<span class="w"> </span>test/data/mock_sweep_config.json<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>--output-dir<span class="w"> </span>output/sweep<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span>--model-name<span class="w"> </span>PoetschLab/GROVER<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span>--dataset<span class="w"> </span>output/dataset<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span>--sweep-count<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span>--project-name<span class="w"> </span>bertnado<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span>--task-type<span class="w"> </span>regression
+<div class="highlight"><span class="filename">Run a W&amp;B sweep</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bertnado-sweep<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--config-path<span class="w"> </span>test/data/mock_sweep_config.json<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--output-dir<span class="w"> </span>output/sweep<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--model-name<span class="w"> </span>PoetschLab/GROVER<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--dataset<span class="w"> </span>output/dataset<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span>--sweep-count<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span>--project-name<span class="w"> </span>bertnado<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span>--task-type<span class="w"> </span>regression
 </code></pre></div>
 <p>The best run configuration is written to
 <code>output/sweep/best_sweep_config.json</code>.</p>
+<h3 id="sweep-config-file">Sweep Config File<a class="headerlink" href="#sweep-config-file" title="Permanent link">&para;</a></h3>
+<p><code>--config-path</code> points to a JSON file that describes the Weights &amp; Biases sweep.
+The example path <code>test/data/mock_sweep_config.json</code> is a small test/demo config;
+for real training, create your own file and pass its path instead.</p>
+<p>The file controls which metric to optimize and which hyperparameters BertNado
+should sample for each sweep run. Common BertNado training parameters include
+<code>learning_rate</code>, <code>per_device_train_batch_size</code>, <code>per_device_eval_batch_size</code>,
+<code>epochs</code>, <code>weight_decay</code>, and <code>logging_steps</code>.</p>
+<div class="highlight"><span class="filename">sweep_config.json</span><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">&quot;method&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bayes&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">&quot;metric&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;eval_loss&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nt">&quot;goal&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;minimize&quot;</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span><span class="nt">&quot;parameters&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="nt">&quot;learning_rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">      </span><span class="nt">&quot;distribution&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;log_uniform_values&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">      </span><span class="nt">&quot;min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.000001</span><span class="p">,</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">      </span><span class="nt">&quot;max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00005</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">    </span><span class="nt">&quot;per_device_train_batch_size&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">      </span><span class="nt">&quot;values&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">]</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">    </span><span class="nt">&quot;per_device_eval_batch_size&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="w">      </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span>
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="w">    </span><span class="nt">&quot;epochs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="w">      </span><span class="nt">&quot;values&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">]</span>
+<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="w">    </span><span class="nt">&quot;weight_decay&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="w">      </span><span class="nt">&quot;values&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.01</span><span class="p">]</span>
+<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a><span class="w">    </span><span class="nt">&quot;logging_steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a><span class="w">      </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
+<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a><span class="p">}</span>
+</code></pre></div>
+<p>BertNado accepts fixed values with <code>value</code>, discrete choices with <code>values</code>, and
+the <code>uniform</code>, <code>int_uniform</code>, or <code>log_uniform_values</code> distributions.</p>
 <h2 id="train-the-best-model">Train the Best Model<a class="headerlink" href="#train-the-best-model" title="Permanent link">&para;</a></h2>
-<div class="highlight"><span class="filename">Train from the best sweep config</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bertnado-train<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--output-dir<span class="w"> </span>output/train<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--model-name<span class="w"> </span>PoetschLab/GROVER<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>--dataset<span class="w"> </span>output/dataset<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span>--best-config-path<span class="w"> </span>output/sweep/best_sweep_config.json<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span>--task-type<span class="w"> </span>regression<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span>--project-name<span class="w"> </span>bertnado
+<div class="highlight"><span class="filename">Train from the best sweep config</span><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bertnado-train<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--output-dir<span class="w"> </span>output/train<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--model-name<span class="w"> </span>PoetschLab/GROVER<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span>--dataset<span class="w"> </span>output/dataset<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span>--best-config-path<span class="w"> </span>output/sweep/best_sweep_config.json<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span>--task-type<span class="w"> </span>regression<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span>--project-name<span class="w"> </span>bertnado
 </code></pre></div>
 <p>The trained model is saved under <code>output/train/model</code>.</p>
 <h2 id="predict-and-evaluate">Predict and Evaluate<a class="headerlink" href="#predict-and-evaluate" title="Permanent link">&para;</a></h2>
-<div class="highlight"><span class="filename">Predict on the test split</span><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>bertnado-predict<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--tokenizer-name<span class="w"> </span>PoetschLab/GROVER<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--model-dir<span class="w"> </span>output/train/model<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--dataset-dir<span class="w"> </span>output/dataset<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--output-dir<span class="w"> </span>output/predictions<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span>--task-type<span class="w"> </span>regression
+<div class="highlight"><span class="filename">Predict on the test split</span><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>bertnado-predict<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span>--tokenizer-name<span class="w"> </span>PoetschLab/GROVER<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>--model-dir<span class="w"> </span>output/train/model<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span>--dataset-dir<span class="w"> </span>output/dataset<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span>--output-dir<span class="w"> </span>output/predictions<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span>--task-type<span class="w"> </span>regression
 </code></pre></div>
 <p>Prediction outputs include a serialized prediction object and task-specific
 figures.</p>
 <h2 id="feature-analysis">Feature Analysis<a class="headerlink" href="#feature-analysis" title="Permanent link">&para;</a></h2>
-<div class="highlight"><span class="filename">Run both attribution methods</span><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bertnado-feature<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--tokenizer-name<span class="w"> </span>PoetschLab/GROVER<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--model-dir<span class="w"> </span>output/train/model<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span>--dataset-dir<span class="w"> </span>output/dataset<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span>--output-dir<span class="w"> </span>output/feature_analysis<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span>--task-type<span class="w"> </span>regression<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span>--method<span class="w"> </span>both
+<div class="highlight"><span class="filename">Run both attribution methods</span><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>bertnado-feature<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span>--tokenizer-name<span class="w"> </span>PoetschLab/GROVER<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span>--model-dir<span class="w"> </span>output/train/model<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span>--dataset-dir<span class="w"> </span>output/dataset<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">  </span>--output-dir<span class="w"> </span>output/feature_analysis<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">  </span>--task-type<span class="w"> </span>regression<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">  </span>--method<span class="w"> </span>both
 </code></pre></div>
 <p>Use <code>--method shap</code>, <code>--method lig</code>, or <code>--method both</code>. For LIG, <code>--target-class</code>,
 <code>--max-examples</code>, and <code>--n-steps</code> are also available.</p>
