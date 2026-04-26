@@ -4,7 +4,6 @@ import datetime
 import random
 import math
 from .finetune import FineTuner
-from .optimization import apply_metric_to_training_config
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -35,13 +34,9 @@ class Sweeper:
             sweep_config = json.load(config_file)
 
         for i in range(sweep_count):
-            config = apply_metric_to_training_config(
-                self._generate_config(sweep_config),
-                self.task_type,
-                metric_name=self.metric_name,
-                metric_goal=self.metric_goal,
-                sweep_config=sweep_config,
-            )
+            config = None
+            if not self._running_in_wandb_agent():
+                config = self._generate_config(sweep_config)
             fine_tuner = FineTuner(
                 model_name=self.model_name,
                 dataset=self.dataset,
@@ -50,7 +45,12 @@ class Sweeper:
                 project_name=self.project_name,
                 job_type="sweep",
             )
-            fine_tuner.fine_tune(config)
+            fine_tuner.fine_tune(
+                config,
+                metric_name=self.metric_name,
+                metric_goal=self.metric_goal,
+                sweep_config=sweep_config,
+            )
 
     def _generate_config(self, sweep_config):
         """Generate a configuration for a single sweep run."""
@@ -75,6 +75,11 @@ class Sweeper:
             else:
                 raise ValueError(f"Invalid parameter configuration: {value}")
         return config
+
+    @staticmethod
+    def _running_in_wandb_agent():
+        """Return whether this process is running under a W&B sweep agent."""
+        return bool(os.environ.get("WANDB_SWEEP_ID"))
 
 
 if __name__ == "__main__":

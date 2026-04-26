@@ -163,9 +163,9 @@ class FineTuner:
         self.pos_weight = pos_weight
         self.job_type = job_type
 
-    def fine_tune(self, config):
+    def fine_tune(self, config=None, metric_name=None, metric_goal=None, sweep_config=None):
         """Fine-tune the model using the provided configuration."""
-        config = apply_metric_to_training_config(config, self.task_type)
+        config = dict(config or {})
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
         # Set device
@@ -177,14 +177,26 @@ class FineTuner:
             else "cpu"
         )
         print(f"Using device: {device}")
-        wandb.init(
-            project=self.project_name,
-            group=self.task_type,
-            job_type="sweep" if self.job_type == "sweep" else "full_train",
-            dir=f"{self.output_dir}",
-            name=f"run_{datetime.now().strftime('%Y-%m-%d_%H%M')}",
-            config=config,
+        wandb_init_kwargs = {
+            "project": self.project_name,
+            "group": self.task_type,
+            "job_type": "sweep" if self.job_type == "sweep" else "full_train",
+            "dir": f"{self.output_dir}",
+            "name": f"run_{datetime.now().strftime('%Y-%m-%d_%H%M')}",
+        }
+        if config:
+            wandb_init_kwargs["config"] = config
+        wandb.init(**wandb_init_kwargs)
+
+        config = dict(wandb.config) or config
+        config = apply_metric_to_training_config(
+            config,
+            self.task_type,
+            metric_name=metric_name,
+            metric_goal=metric_goal,
+            sweep_config=sweep_config,
         )
+        wandb.config.update(config, allow_val_change=True)
 
         # Load datasets
         dataset = load_from_disk(self.dataset)
