@@ -29,6 +29,22 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Resolve package version
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          version="${version#V}"
+          version="${version#.}"
+
+          if [[ ! "$version" =~ ^[0-9]+(\.[0-9]+)*((a|b|rc)[0-9]+)?(\.post[0-9]+)?(\.dev[0-9]+)?$ ]]; then
+            echo "Could not derive a valid Python package version from tag '$tag'." >&2
+            exit 1
+          fi
+
+          echo "SETUPTOOLS_SCM_PRETEND_VERSION_FOR_BERTNADO=$version" >> "$GITHUB_ENV"
+          echo "Building BertNado version $version from tag $tag"
+
       - name: Build package
         run: uv build
 

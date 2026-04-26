@@ -60,6 +60,7 @@ bertnado-feature = "bertnado.cli:feature_analysis_cli"
 [tool.setuptools_scm]
 write_to = "bertnado/_version.py"
 local_scheme = "no-local-version"
+tag_regex = '^(?:v\.?|V\.?)?(?P<version>\d+(?:\.\d+)*(?:(?:a|b|rc)\d+)?(?:\.post\d+)?(?:\.dev\d+)?)$'
 
 [tool.setuptools.packages.find]
 include = ["bertnado*"]
