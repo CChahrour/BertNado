@@ -91,13 +91,13 @@ def predict_and_evaluate(
 
     if task_type == "binary_classification":
         labels = prediction_output.label_ids.flatten()
-        probs = expit(logits)
-        predicted_values = (probs > 0.5).astype(int).flatten()
+        probs = expit(logits).flatten()
+        predicted_values = (probs >= threshold).astype(int)
 
         accuracy = accuracy_score(labels, predicted_values)
         auc = roc_auc_score(labels, probs)
         f1 = f1_score(labels, predicted_values)
-        pr = average_precision_score(labels, predicted_values)
+        pr = average_precision_score(labels, probs)
         print(f"Accuracy: {accuracy:.2f}, AUC: {auc:.2f}, F1: {f1:.2f}, PR: {pr:.2f}")
         
         print("Plotting ROC curve...")
