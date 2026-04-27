@@ -35,12 +35,6 @@ class Attributer:
 
     def extract_shap_features(self):
         """Extract SHAP features using the specified model and tokenizer."""
-        (self.tokenizer_name,)
-        (self.model_dir,)
-        (self.dataset_dir,)
-        (self.output_dir,)
-        (self.task_type,)
-
         # Load model and tokenizer
         model = AutoModelForSequenceClassification.from_pretrained(
             self.model_dir, local_files_only=True, trust_remote_code=True
@@ -56,32 +50,24 @@ class Attributer:
         
         sequences = test_dataset["sequence"]
         
-        # Create SHAP explainer
-        classifier = pipeline("text-classification", model=model, tokenizer=tokenizer)
+        # Determine task and create appropriate pipeline
         if self.task_type == "binary_classification":
-            classifier = TransformersPipeline(
-                model=model,
-                tokenizer=tokenizer,
-                task="text-classification",
-                device=0,
-            )
+            task = "text-classification"
+            device = 0 if torch.cuda.is_available() else -1
         elif self.task_type == "multilabel_classification":
-            classifier = TransformersPipeline(
-                model=model,
-                tokenizer=tokenizer,
-                task="text-classification",
-                device=0,
-                top_k=None,
-            )
+            task = "text-classification"
+            device = 0 if torch.cuda.is_available() else -1
         elif self.task_type == "regression":
-            classifier = TransformersPipeline(
-                model=model,
-                tokenizer=tokenizer,
-                task="text-regression",
-                device=0,
-            )
+            task = "text-regression"
+            device = 0 if torch.cuda.is_available() else -1
         else:
             raise ValueError(f"Unknown task type: {self.task_type}")
+        
+        # Create pipeline and wrap with SHAP
+        clf_pipeline = pipeline(task, model=model, tokenizer=tokenizer, device=device)
+        classifier = TransformersPipeline(clf_pipeline)
+        
+        # Create SHAP explainer and compute values
         explainer = shap.Explainer(classifier)
         shap_values = explainer(sequences)
 
@@ -122,6 +108,21 @@ class Attributer:
 
         lig = LayerIntegratedGradients(custom_forward, model.base_model.embeddings)
 
+        # Validate target_class against model output size
+        # Do a test forward pass to determine number of output classes
+        with torch.no_grad():
+            test_input_ids = torch.zeros((1, 512), dtype=torch.long, device=device)
+            test_attention_mask = torch.ones((1, 512), dtype=torch.long, device=device)
+            test_output = custom_forward(test_input_ids, test_attention_mask)
+            num_classes = test_output.shape[-1]
+        
+        # Ensure target_class is valid
+        if self.target_class >= num_classes:
+            print(f"Warning: target_class {self.target_class} >= num_classes {num_classes}. Using target_class=0")
+            target_class = 0
+        else:
+            target_class = self.target_class
+
         attributions = []
         print(f"Computing LIG on {len(dataset)} samples...")
         for example in tqdm(dataset, desc="Attributing"):
@@ -132,7 +133,7 @@ class Attributer:
             attr = lig.attribute(
                 inputs=input_ids,
                 additional_forward_args=(attention_mask,),
-                target=self.target_class,
+                target=target_class,
                 n_steps=self.n_steps,
             )
             attributions.append(attr.detach().cpu())
