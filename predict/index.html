@@ -934,6 +934,22 @@ when you want to compute custom metrics or inspect logits later.</p>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    |-- precision_recall_curve.png
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    `-- confusion_matrix.png
 </code></pre></div>
+<p>Multilabel classification additionally saves:</p>
+<div class="highlight"><span class="filename">Multilabel classification outputs</span><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>output/predictions/
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>|-- metrics.json
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>|-- multilabel_per_class_metrics.csv
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>`-- figures/
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    |-- multilabel_roc_curves.png
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    |-- multilabel_precision_recall_curves.png
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    |-- multilabel_confusion_matrix.png
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    `-- multilabel_label_counts.png
+</code></pre></div>
+<p><code>metrics.json</code> contains aggregate multilabel metrics such as subset accuracy,
+hamming loss, F1, precision, recall, average precision, and ROC AUC. The CSV
+file contains one-vs-rest metrics and confusion counts for each label. For
+multilabel outputs, BertNado first reads label names from
+<code>&lt;dataset-dir&gt;/label2id.json</code>, then falls back to the model config's <code>label2id</code>
+mapping when the dataset mapping is unavailable.</p>
 <p>Other task types write their task-specific metrics and figures when supported.</p>
 
 
