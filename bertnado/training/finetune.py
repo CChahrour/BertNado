@@ -144,6 +144,29 @@ def _extract_training_argument_kwargs(source, strict):
     return extracted
 
 
+def _num_multilabel_outputs(train_dataset):
+    """Infer the number of outputs for a multilabel dataset."""
+    labels_feature = train_dataset.features["labels"]
+    nested_feature = getattr(labels_feature, "feature", None)
+    num_classes = getattr(nested_feature, "num_classes", None)
+    if num_classes is not None:
+        return num_classes
+
+    first_label = train_dataset[0]["labels"]
+    if isinstance(first_label, str):
+        cleaned = first_label.strip().strip("[]()")
+        if cleaned:
+            return len(cleaned.replace(",", " ").split())
+    try:
+        return len(first_label)
+    except TypeError as error:
+        raise ValueError(
+            "Multilabel datasets must store each label as a sequence, e.g. "
+            "[0, 1]. Found a scalar label instead. Rebuild the dataset from a "
+            "multilabel parquet file or use task_type='binary_classification'."
+        ) from error
+
+
 class FineTuner:
     def __init__(
         self,
@@ -207,7 +230,7 @@ class FineTuner:
         if self.task_type == "binary_classification":
             num_labels = 1
         elif self.task_type == "multilabel_classification":
-            num_labels = train_dataset.features["labels"].feature.num_classes
+            num_labels = _num_multilabel_outputs(train_dataset)
         elif self.task_type == "regression":
             num_labels = 1
         else:

@@ -2,8 +2,10 @@ import argparse
 import json
 import os
 import warnings
+from collections.abc import Iterable
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 from crested.utils import fetch_sequences
@@ -11,6 +13,23 @@ from datasets import Dataset, DatasetDict
 from transformers import AutoTokenizer
 
 warnings.filterwarnings("ignore")
+
+
+def _parse_multilabel_label(value):
+    """Normalize a multilabel value to a list of integer labels."""
+    if isinstance(value, str):
+        cleaned = value.strip().strip("[]()")
+        if not cleaned:
+            return []
+        return [int(float(item)) for item in cleaned.replace(",", " ").split()]
+
+    if isinstance(value, Iterable):
+        return [int(float(item)) for item in value]
+
+    if pd.isna(value):
+        return []
+
+    return [int(float(value))]
 
 
 def tokenize_dataset(dataset, tokenizer_name):
@@ -44,7 +63,7 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
     elif task_type == "multilabel_classification":
         # Convert to multi-label format
         data = data.rename(columns={target_column: "labels"})
-        data["labels"] = data["labels"].apply(lambda x: [int(i) for i in str(x).split(",")])
+        data["labels"] = data["labels"].apply(_parse_multilabel_label)
     else:
         raise ValueError(f"Unsupported task type: {task_type}")
 
@@ -55,7 +74,15 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
 
     for name, subset in zip(["train", "val", "test"], [train, val, test]):
         plt.figure(figsize=(8, 6))
-        sns.histplot(subset["labels"], bins=30, kde=True)
+        if task_type == "multilabel_classification":
+            label_matrix = np.asarray(subset["labels"].tolist())
+            label_counts = pd.Series(
+                label_matrix.sum(axis=0),
+                index=[f"label_{i}" for i in range(label_matrix.shape[1])],
+            )
+            sns.barplot(x=label_counts.index, y=label_counts.values)
+        else:
+            sns.histplot(subset["labels"], bins=30, kde=True)
         plt.title(f"Label Distribution: {name}")
         plt.xlabel("Labels")
         plt.ylabel("Count")
