@@ -84,4 +84,24 @@ output/predictions/
     `-- confusion_matrix.png
 ```
 
+Multilabel classification additionally saves:
+
+```text title="Multilabel classification outputs"
+output/predictions/
+|-- metrics.json
+|-- multilabel_per_class_metrics.csv
+`-- figures/
+    |-- multilabel_roc_curves.png
+    |-- multilabel_precision_recall_curves.png
+    |-- multilabel_confusion_matrix.png
+    `-- multilabel_label_counts.png
+```
+
+`metrics.json` contains aggregate multilabel metrics such as subset accuracy,
+hamming loss, F1, precision, recall, average precision, and ROC AUC. The CSV
+file contains one-vs-rest metrics and confusion counts for each label. For
+multilabel outputs, BertNado first reads label names from
+`<dataset-dir>/label2id.json`, then falls back to the model config's `label2id`
+mapping when the dataset mapping is unavailable.
+
 Other task types write their task-specific metrics and figures when supported.

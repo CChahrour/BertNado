@@ -156,6 +156,9 @@ Run both SHAP and LIG:
 - **Figures** saved to `output/figures/`
   - Binary classification: ROC and precision-recall curves
   - Binary classification: Confusion matrix
+  - Multilabel classification: ROC, precision-recall, confusion matrix, and label count plots
+- **Prediction metrics** saved to `output/predictions/metrics.json`
+  - Multilabel classification: aggregate metrics plus per-label CSV metrics
 
 - **SHAP scores** saved to `output/shap/`
 - **Trained models** saved to `output/models/`
