@@ -38,7 +38,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "mkdocs-material==9.7.4",
+    "mkdocs-material==9.7.6",
     "mkdocs>=1.6,<2.0",
     "mkdocs-jupyter==0.25.1",
     "mkdocstrings-python==2.0.3",
