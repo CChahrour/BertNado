@@ -18,21 +18,22 @@ dynamic = ["version"]
 
 dependencies = [
     "anndata==0.11.4",
-    "captum==0.8.0",
+    "captum==0.9.0",
     "click==8.1.8",
     "crested==1.4.1",
     "datasets==3.6.0",
     "loguru==0.7.3",
-    "matplotlib==3.8.4",
+    "matplotlib==3.10.9",
     "modisco-lite==2.3.2",
-    "pandas==2.1.4",
+    "pandas==2.3.3",
     "peft==0.15.1",
-    "scikit-learn==1.5.2",
+    "numpy >= 2",
+    "scikit-learn==1.8.0",
     "seaborn==0.13.2",
-    "shap==0.47.1",
-    "torch==2.5.1",
+    "shap==0.51.0",
+    "torch==2.11.0",
     "transformers==4.51.0",
-    "wandb==0.19.9"
+    "wandb==0.26.1"
 ]
 
 [project.optional-dependencies]
