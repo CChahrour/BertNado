@@ -25,7 +25,7 @@ dependencies = [
     "loguru==0.7.3",
     "matplotlib==3.10.9",
     "modisco-lite==2.3.2",
-    "pandas==2.3.3",
+    "pandas==3.0.3",
     "peft==0.15.1",
     "numpy >= 2",
     "scikit-learn==1.8.0",
