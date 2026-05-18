@@ -17,7 +17,7 @@ license = "GPL-3.0-only"
 dynamic = ["version"]
 
 dependencies = [
-    "anndata==0.11.4",
+    "anndata==0.12.14",
     "captum==0.9.0",
     "click==8.3.3",
     "crested==1.4.1",
