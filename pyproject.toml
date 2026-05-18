@@ -43,7 +43,7 @@ dev = [
     "mkdocs-jupyter==0.25.1",
     "mkdocstrings-python==2.0.3",
     "mkdocstrings==1.0.3",
-    "pymdown-extensions==10.21",
+    "pymdown-extensions==10.21.3",
     "pytest==9.0.3",
     "pytest-cov==7.0.0",
     "pytest-xdist>=3.0",
