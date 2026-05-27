@@ -20,7 +20,7 @@ dependencies = [
     "anndata==0.12.14",
     "captum==0.9.0",
     "click==8.3.3",
-    "crested==1.4.1",
+    "crested==1.8.1",
     "datasets==4.8.5",
     "loguru==0.7.3",
     "matplotlib==3.10.9",
