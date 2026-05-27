@@ -21,7 +21,7 @@ dependencies = [
     "captum==0.9.0",
     "click==8.3.3",
     "crested==1.4.1",
-    "datasets==3.6.0",
+    "datasets==4.8.5",
     "loguru==0.7.3",
     "matplotlib==3.10.9",
     "modisco-lite==2.3.2",
