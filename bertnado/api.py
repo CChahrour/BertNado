@@ -17,14 +17,24 @@ from pathlib import Path
 from typing import Any, Literal
 
 PathLike = str | os.PathLike[str]
-TaskType = Literal["binary_classification", "multilabel_classification", "regression"]
+TaskType = Literal[
+    "binary_classification",
+    "multilabel_classification",
+    "multiclass_classification",
+    "regression",
+]
 FeatureMethod = Literal["shap", "lig", "both"]
 MetricGoal = Literal["maximize", "minimize"]
 
 DEFAULT_MODEL_NAME = "PoetschLab/GROVER"
 DEFAULT_TOKENIZER_NAME = "PoetschLab/GROVER"
 
-_TASK_TYPES = {"binary_classification", "multilabel_classification", "regression"}
+_TASK_TYPES = {
+    "binary_classification",
+    "multilabel_classification",
+    "multiclass_classification",
+    "regression",
+}
 _FEATURE_METHODS = {"shap", "lig", "both"}
 
 
@@ -36,6 +46,7 @@ def prepare_dataset(
     task_type: TaskType,
     tokenizer_name: str = DEFAULT_TOKENIZER_NAME,
     threshold: float = 0.5,
+    label2id: dict[str, int] | None = None,
 ) -> Any:
     """Prepare and tokenize a chromosome-aware dataset.
 
@@ -51,11 +62,16 @@ def prepare_dataset(
     :param fasta_file: Path to the genome FASTA file used to extract sequences.
     :param output_dir: Directory where the prepared dataset should be written.
     :param task_type: Learning task. Must be ``"binary_classification"``,
-        ``"multilabel_classification"``, or ``"regression"``.
+        ``"multilabel_classification"``, ``"multiclass_classification"``, or
+        ``"regression"``.
     :param tokenizer_name: Hugging Face tokenizer name or local tokenizer path.
         Defaults to ``"PoetschLab/GROVER"``.
     :param threshold: Decision threshold used when converting targets for
         binary classification. Defaults to ``0.5``.
+    :param label2id: Optional explicit class name -> class index mapping for
+        ``"multiclass_classification"``. When omitted, BertNado builds the
+        mapping from the sorted unique values of ``target_column`` and writes
+        it to ``label2id.json`` in ``output_dir``.
     :returns: The value returned by
         :meth:`bertnado.data.prepare_dataset.DatasetPreparer.prepare`.
     :raises ValueError: If ``task_type`` is not one of BertNado's supported task
@@ -73,6 +89,7 @@ def prepare_dataset(
         _path(output_dir),
         task_type,
         threshold,
+        label2id,
     )
     return preparer.prepare()
 
@@ -104,7 +121,8 @@ def run_sweep(
     :param project_name: W&B project name used for sweep creation and run
         lookup.
     :param task_type: Learning task. Must be ``"binary_classification"``,
-        ``"multilabel_classification"``, or ``"regression"``.
+        ``"multilabel_classification"``, ``"multiclass_classification"``, or
+        ``"regression"``.
     :param model_name: Hugging Face model name or local model path. Defaults to
         ``"PoetschLab/GROVER"``.
     :param sweep_count: Number of W&B agent trials to run. Defaults to ``10``.
@@ -232,7 +250,8 @@ def train_model(
         :func:`run_sweep`.
     :param project_name: W&B project name used for training run logging.
     :param task_type: Learning task. Must be ``"binary_classification"``,
-        ``"multilabel_classification"``, or ``"regression"``.
+        ``"multilabel_classification"``, ``"multiclass_classification"``, or
+        ``"regression"``.
     :param model_name: Hugging Face model name or local model path. Defaults to
         ``"PoetschLab/GROVER"``.
     :param pos_weight: Optional positive-class weight for imbalanced
@@ -291,7 +310,8 @@ def predict_and_evaluate(
     :param output_dir: Directory where predictions, metrics, and figures should
         be saved.
     :param task_type: Learning task. Must be ``"binary_classification"``,
-        ``"multilabel_classification"``, or ``"regression"``.
+        ``"multilabel_classification"``, ``"multiclass_classification"``, or
+        ``"regression"``.
     :param tokenizer_name: Hugging Face tokenizer name or local tokenizer path.
         Defaults to ``"PoetschLab/GROVER"``.
     :param threshold: Decision threshold used for binary or multilabel
@@ -340,7 +360,8 @@ def extract_features(
     :param output_dir: Directory where feature-attribution outputs should be
         saved.
     :param task_type: Learning task. Must be ``"binary_classification"``,
-        ``"multilabel_classification"``, or ``"regression"``.
+        ``"multilabel_classification"``, ``"multiclass_classification"``, or
+        ``"regression"``.
     :param tokenizer_name: Hugging Face tokenizer name or local tokenizer path.
         Defaults to ``"PoetschLab/GROVER"``.
     :param method: Attribution method to run. Must be ``"shap"``, ``"lig"``, or
@@ -396,7 +417,8 @@ def analyze_features(
     :param output_dir: Directory where feature-attribution outputs should be
         saved.
     :param task_type: Learning task. Must be ``"binary_classification"``,
-        ``"multilabel_classification"``, or ``"regression"``.
+        ``"multilabel_classification"``, ``"multiclass_classification"``, or
+        ``"regression"``.
     :param tokenizer_name: Hugging Face tokenizer name or local tokenizer path.
         Defaults to ``"PoetschLab/GROVER"``.
     :param method: Attribution method to run. Must be ``"shap"``, ``"lig"``, or

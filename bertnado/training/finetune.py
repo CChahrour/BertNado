@@ -13,6 +13,7 @@ from bertnado.training.metrics import (
     binary_classification_metrics,
     compute_metrics_regression,
     multi_label_classification_metrics,
+    multiclass_classification_metrics,
 )
 from bertnado.training.optimization import apply_metric_to_training_config
 from bertnado.training.trainers import GeneralizedTrainer
@@ -167,6 +168,22 @@ def _num_multilabel_outputs(train_dataset):
         ) from error
 
 
+def _num_multiclass_labels(dataset_dir, train_dataset):
+    """Infer the number of classes for a multiclass dataset."""
+    label2id_path = os.path.join(dataset_dir, "label2id.json")
+    if os.path.exists(label2id_path):
+        with open(label2id_path) as f:
+            label2id = json.load(f)
+        return len(label2id)
+
+    labels_feature = train_dataset.features["labels"]
+    num_classes = getattr(labels_feature, "num_classes", None)
+    if num_classes is not None:
+        return num_classes
+
+    return int(max(train_dataset["labels"])) + 1
+
+
 class FineTuner:
     def __init__(
         self,
@@ -231,6 +248,8 @@ class FineTuner:
             num_labels = 1
         elif self.task_type == "multilabel_classification":
             num_labels = _num_multilabel_outputs(train_dataset)
+        elif self.task_type == "multiclass_classification":
+            num_labels = _num_multiclass_labels(self.dataset, train_dataset)
         elif self.task_type == "regression":
             num_labels = 1
         else:
@@ -250,6 +269,8 @@ class FineTuner:
             compute_metrics = binary_classification_metrics
         elif self.task_type == "multilabel_classification":
             compute_metrics = multi_label_classification_metrics
+        elif self.task_type == "multiclass_classification":
+            compute_metrics = multiclass_classification_metrics
         elif self.task_type == "regression":
             compute_metrics = compute_metrics_regression
         else:
@@ -265,6 +286,19 @@ class FineTuner:
                     pos_weight_val = class_weights["0"] / class_weights["1"]
                     self.pos_weight = torch.tensor([pos_weight_val])
                     print(f"⚖️ Loaded pos_weight from class_weights.json: {self.pos_weight.item():.2f}")
+
+        # Auto-load per-class loss weights from class_weights.json if not passed
+        if self.pos_weight is None and self.task_type == "multiclass_classification":
+            class_weights_path = os.path.join(self.dataset, "class_weights.json")
+            if os.path.exists(class_weights_path):
+                with open(class_weights_path) as f:
+                    class_weights = json.load(f)
+                counts = [class_weights.get(str(i), 0) for i in range(num_labels)]
+                if all(count > 0 for count in counts):
+                    total = sum(counts)
+                    weights = [total / (num_labels * count) for count in counts]
+                    self.pos_weight = torch.tensor(weights, dtype=torch.float32)
+                    print(f"⚖️ Loaded class weights from class_weights.json: {weights}")
 
 
 
@@ -311,7 +345,12 @@ if __name__ == "__main__":
         "--task_type",
         type=str,
         required=True,
-        choices=["binary_classification", "multilabel_classification", "regression"],
+        choices=[
+            "binary_classification",
+            "multilabel_classification",
+            "multiclass_classification",
+            "regression",
+        ],
         help="Type of task to fine-tune for.",
     )
     parser.add_argument(
@@ -319,7 +358,10 @@ if __name__ == "__main__":
         type=float,
         nargs="*",
         default=None,
-        help="Positive class weight for binary or multilabel classification.",
+        help=(
+            "Positive class weight for binary or multilabel classification, "
+            "or per-class loss weights for multiclass classification."
+        ),
     )
     parser.add_argument(
         "--config",

@@ -107,7 +107,7 @@ def cli():
     "--task-type",
     required=True,
     type=click.Choice(
-        ["binary_classification", "multilabel_classification", "regression"]
+        ["binary_classification", "multilabel_classification", "multiclass_classification", "regression"]
     ),
     help="Task type.",
 )
@@ -189,7 +189,7 @@ def prepare_data_cli(
     "--task-type",
     required=True,
     type=click.Choice(
-        ["binary_classification", "multilabel_classification", "regression"]
+        ["binary_classification", "multilabel_classification", "multiclass_classification", "regression"]
     ),
     help="Task type.",
 )
@@ -302,7 +302,7 @@ def run_sweep_cli(
     "--task-type",
     required=True,
     type=click.Choice(
-        ["binary_classification", "multilabel_classification", "regression"]
+        ["binary_classification", "multilabel_classification", "multiclass_classification", "regression"]
     ),
     help="Task type.",
 )
@@ -371,7 +371,7 @@ def full_train_cli(
     "--task-type",
     required=True,
     type=click.Choice(
-        ["binary_classification", "multilabel_classification", "regression"]
+        ["binary_classification", "multilabel_classification", "multiclass_classification", "regression"]
     ),
     help="Task type.",
 )
@@ -418,7 +418,7 @@ def predict_and_evaluate_cli(
     "--task-type",
     required=True,
     type=click.Choice(
-        ["binary_classification", "multilabel_classification", "regression"]
+        ["binary_classification", "multilabel_classification", "multiclass_classification", "regression"]
     ),
     help="Task type.",
 )

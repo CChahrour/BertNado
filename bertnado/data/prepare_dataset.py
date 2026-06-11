@@ -42,7 +42,25 @@ def tokenize_dataset(dataset, tokenizer_name):
     return dataset.map(tokenize_function, batched=True)
 
 
-def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_dir, task_type, threshold=0.5):
+def _build_label2id(values, label2id=None):
+    """Build (or validate) a label name -> class index mapping."""
+    if label2id is not None:
+        return {str(label): int(index) for label, index in label2id.items()}
+
+    unique_labels = sorted(str(value) for value in pd.unique(values))
+    return {label: index for index, label in enumerate(unique_labels)}
+
+
+def prepare_data(
+    file_path,
+    target_column,
+    fasta_file,
+    tokenizer_name,
+    output_dir,
+    task_type,
+    threshold=0.5,
+    label2id=None,
+):
     """Load and split the dataset into training, validation, and test sets based on chromosome, fetch sequences, and convert to Hugging Face Dataset."""
     os.makedirs(output_dir, exist_ok=True)
     data = pd.read_parquet(file_path)
@@ -58,12 +76,26 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
     if task_type == "binary_classification":
         data[target_column] = (data[target_column] > threshold).astype(int)
 
+    label_names = None
     if task_type in ["binary_classification", "regression"]:
         data = data.rename(columns={target_column: "labels"})
     elif task_type == "multilabel_classification":
         # Convert to multi-label format
         data = data.rename(columns={target_column: "labels"})
         data["labels"] = data["labels"].apply(_parse_multilabel_label)
+    elif task_type == "multiclass_classification":
+        # Convert to single-label class indices
+        data = data.rename(columns={target_column: "labels"})
+        label2id = _build_label2id(data["labels"], label2id)
+        label_names = [
+            label for label, _ in sorted(label2id.items(), key=lambda item: item[1])
+        ]
+        data["labels"] = data["labels"].astype(str).map(label2id).astype(int)
+
+        label2id_path = os.path.join(output_dir, "label2id.json")
+        with open(label2id_path, "w") as f:
+            json.dump(label2id, f, indent=2)
+        print(f"Label mapping saved to {label2id_path}")
     else:
         raise ValueError(f"Unsupported task type: {task_type}")
 
@@ -81,6 +113,11 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
                 index=[f"label_{i}" for i in range(label_matrix.shape[1])],
             )
             sns.barplot(x=label_counts.index, y=label_counts.values)
+        elif task_type == "multiclass_classification":
+            sns.countplot(x=subset["labels"], order=range(len(label_names)))
+            plt.xticks(
+                ticks=range(len(label_names)), labels=label_names, rotation=45, ha="right"
+            )
         else:
             sns.histplot(subset["labels"], bins=30, kde=True)
         plt.title(f"Label Distribution: {name}")
@@ -112,7 +149,22 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
         }
 
         print(f"Class frequencies: {class_dict}")
-        
+
+        class_weights_path = os.path.join(output_dir, "class_weights.json")
+        with open(class_weights_path, "w") as f:
+            json.dump(class_dict, f, indent=2)
+        print(f"Class frequencies saved to {class_weights_path}")
+
+    if task_type == "multiclass_classification":
+        # Calculate per-class frequencies from the training split
+        class_counts = train["labels"].value_counts()
+        class_dict = {
+            str(class_index): int(class_counts.get(class_index, 0))
+            for class_index in range(len(label_names))
+        }
+
+        print(f"Class frequencies: {class_dict}")
+
         class_weights_path = os.path.join(output_dir, "class_weights.json")
         with open(class_weights_path, "w") as f:
             json.dump(class_dict, f, indent=2)
@@ -147,7 +199,17 @@ def prepare_data(file_path, target_column, fasta_file, tokenizer_name, output_di
 
 
 class DatasetPreparer:
-    def __init__(self, file_path, target_column, fasta_file, tokenizer_name, output_dir, task_type, threshold=0.5):
+    def __init__(
+        self,
+        file_path,
+        target_column,
+        fasta_file,
+        tokenizer_name,
+        output_dir,
+        task_type,
+        threshold=0.5,
+        label2id=None,
+    ):
         self.file_path = file_path
         self.target_column = target_column
         self.fasta_file = fasta_file
@@ -155,6 +217,7 @@ class DatasetPreparer:
         self.output_dir = output_dir
         self.task_type = task_type
         self.threshold = threshold
+        self.label2id = label2id
 
     def prepare(self):
         """Prepare the dataset for training."""
@@ -166,6 +229,7 @@ class DatasetPreparer:
             self.output_dir,
             self.task_type,
             self.threshold,
+            self.label2id,
         )
 
 
@@ -200,7 +264,12 @@ if __name__ == "__main__":
         "--task_type",
         type=str,
         required=True,
-        choices=["binary_classification", "multilabel_classification", "regression"],
+        choices=[
+            "binary_classification",
+            "multilabel_classification",
+            "multiclass_classification",
+            "regression",
+        ],
         help="Type of task to evaluate.",
     )
     parser.add_argument(

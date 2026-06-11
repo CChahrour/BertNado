@@ -11,6 +11,7 @@ _DEFAULT_METRICS: dict[str, tuple[str, MetricGoal]] = {
     "regression": ("eval/r2", "maximize"),
     "binary_classification": ("eval/roc_auc", "maximize"),
     "multilabel_classification": ("eval/roc_auc", "maximize"),
+    "multiclass_classification": ("eval/roc_auc", "maximize"),
 }
 
 _SUPPORTED_TRAINING_METRICS: dict[str, set[str]] = {
@@ -24,6 +25,14 @@ _SUPPORTED_TRAINING_METRICS: dict[str, set[str]] = {
         "roc_auc",
     },
     "multilabel_classification": {
+        "loss",
+        "accuracy",
+        "f1",
+        "precision",
+        "recall",
+        "roc_auc",
+    },
+    "multiclass_classification": {
         "loss",
         "accuracy",
         "f1",

@@ -7,10 +7,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from datasets import load_from_disk
-from scipy.special import expit
+from scipy.special import expit, softmax
 from sklearn.metrics import (
     accuracy_score,
     average_precision_score,
+    classification_report,
     confusion_matrix,
     f1_score,
     hamming_loss,
@@ -116,6 +117,7 @@ def _write_multilabel_per_class_metrics(
     probs,
     label_names,
     output_dir,
+    filename="multilabel_per_class_metrics.csv",
 ):
     rows = []
     precision = precision_score(labels, predictions, average=None, zero_division=0)
@@ -156,7 +158,7 @@ def _write_multilabel_per_class_metrics(
         }
         rows.append(row)
 
-    metrics_file = os.path.join(output_dir, "multilabel_per_class_metrics.csv")
+    metrics_file = os.path.join(output_dir, filename)
     with open(metrics_file, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=rows[0].keys())
         writer.writeheader()
@@ -165,8 +167,15 @@ def _write_multilabel_per_class_metrics(
     print(f"Per-class metrics saved to {metrics_file}")
 
 
-def _plot_multilabel_roc(labels, probs, label_names, figures_dir):
-    output_path = os.path.join(figures_dir, "multilabel_roc_curves.png")
+def _plot_multilabel_roc(
+    labels,
+    probs,
+    label_names,
+    figures_dir,
+    output_filename="multilabel_roc_curves.png",
+    title="Multilabel ROC Curves",
+):
+    output_path = os.path.join(figures_dir, output_filename)
     plt.figure(figsize=(6, 6))
 
     plotted = False
@@ -209,7 +218,6 @@ def _plot_multilabel_roc(labels, probs, label_names, figures_dir):
         plt.gca().set_aspect("equal", adjustable="box")
         plt.xlabel("False Positive Rate")
         plt.ylabel("True Positive Rate")
-        title = "Multilabel ROC Curves"
         if micro_auc is not None:
             title = f"{title} (micro AUC = {micro_auc:.2f})"
         plt.title(title)
@@ -230,8 +238,15 @@ def _plot_multilabel_roc(labels, probs, label_names, figures_dir):
     print(f"Plot saved to {output_path}")
 
 
-def _plot_multilabel_precision_recall(labels, probs, label_names, figures_dir):
-    output_path = os.path.join(figures_dir, "multilabel_precision_recall_curves.png")
+def _plot_multilabel_precision_recall(
+    labels,
+    probs,
+    label_names,
+    figures_dir,
+    output_filename="multilabel_precision_recall_curves.png",
+    title="Multilabel Precision-Recall Curves",
+):
+    output_path = os.path.join(figures_dir, output_filename)
     plt.figure(figsize=(8, 6))
 
     plotted = False
@@ -273,7 +288,6 @@ def _plot_multilabel_precision_recall(labels, probs, label_names, figures_dir):
     if plotted:
         plt.xlabel("Recall")
         plt.ylabel("Precision")
-        title = "Multilabel Precision-Recall Curves"
         if micro_ap is not None:
             title = f"{title} (micro AP = {micro_ap:.2f})"
         plt.title(title)
@@ -318,8 +332,41 @@ def _plot_multilabel_confusion_matrix(labels, predictions, figures_dir):
     print(f"Plot saved to {output_path}")
 
 
-def _plot_multilabel_label_counts(labels, predictions, label_names, figures_dir):
-    output_path = os.path.join(figures_dir, "multilabel_label_counts.png")
+def _plot_multiclass_confusion_matrix(labels, probs, label_names, figures_dir):
+    output_path = os.path.join(figures_dir, "multiclass_confusion_matrix.png")
+    y_true = labels.argmax(axis=1)
+    y_pred = probs.argmax(axis=1)
+    cm = confusion_matrix(y_true, y_pred, labels=range(len(label_names)))
+
+    plt.figure(figsize=(6, 6))
+    sns.heatmap(
+        cm,
+        annot=True,
+        fmt="d",
+        cmap="Blues",
+        cbar=False,
+        xticklabels=label_names,
+        yticklabels=label_names,
+        square=True,
+    )
+    plt.xlabel("Predicted")
+    plt.ylabel("True")
+    plt.title("Multiclass Confusion Matrix (argmax)")
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=600, bbox_inches="tight")
+    plt.close()
+    print(f"Plot saved to {output_path}")
+
+
+def _plot_multilabel_label_counts(
+    labels,
+    predictions,
+    label_names,
+    figures_dir,
+    output_filename="multilabel_label_counts.png",
+    title="True vs Predicted Positive Labels",
+):
+    output_path = os.path.join(figures_dir, output_filename)
     label_indices = np.arange(labels.shape[1])
     true_counts = labels.sum(axis=0)
     predicted_counts = predictions.sum(axis=0)
@@ -330,8 +377,8 @@ def _plot_multilabel_label_counts(labels, predictions, label_names, figures_dir)
     plt.bar(label_indices - width / 2, true_counts, width, label="True")
     plt.bar(label_indices + width / 2, predicted_counts, width, label="Predicted")
     plt.xlabel("Label")
-    plt.ylabel("Positive Count")
-    plt.title("True vs Predicted Positive Labels")
+    plt.ylabel("Count")
+    plt.title(title)
     plt.xticks(label_indices, label_names, rotation=45, ha="right")
     plt.legend()
     plt.tight_layout()
@@ -431,6 +478,56 @@ def _multilabel_metrics(labels, predictions, probs, threshold, label_names):
     return metrics
 
 
+def _multiclass_metrics(labels, predictions, probs, label_names):
+    metrics = {
+        "task_type": "multiclass_classification",
+        "num_samples": int(labels.shape[0]),
+        "num_classes": int(probs.shape[1]),
+        "label_names": label_names,
+        "accuracy": float(accuracy_score(labels, predictions)),
+        "f1_macro": float(f1_score(labels, predictions, average="macro", zero_division=0)),
+        "f1_micro": float(f1_score(labels, predictions, average="micro", zero_division=0)),
+        "f1_weighted": float(
+            f1_score(labels, predictions, average="weighted", zero_division=0)
+        ),
+        "precision_macro": float(
+            precision_score(labels, predictions, average="macro", zero_division=0)
+        ),
+        "precision_micro": float(
+            precision_score(labels, predictions, average="micro", zero_division=0)
+        ),
+        "precision_weighted": float(
+            precision_score(labels, predictions, average="weighted", zero_division=0)
+        ),
+        "recall_macro": float(
+            recall_score(labels, predictions, average="macro", zero_division=0)
+        ),
+        "recall_micro": float(
+            recall_score(labels, predictions, average="micro", zero_division=0)
+        ),
+        "recall_weighted": float(
+            recall_score(labels, predictions, average="weighted", zero_division=0)
+        ),
+        "roc_auc_macro": _safe_metric(
+            "ROC AUC macro",
+            roc_auc_score,
+            labels,
+            probs,
+            multi_class="ovr",
+            average="macro",
+        ),
+        "roc_auc_weighted": _safe_metric(
+            "ROC AUC weighted",
+            roc_auc_score,
+            labels,
+            probs,
+            multi_class="ovr",
+            average="weighted",
+        ),
+    }
+    return metrics
+
+
 def predict_and_evaluate(
     tokenizer_name, model_path, dataset, output_dir, task_type, threshold=0.5
 ):
@@ -459,7 +556,9 @@ def predict_and_evaluate(
     
     # Predict
     print(f"Predicting on {len(test_dataset)} samples...")
-    trainer = GeneralizedTrainer(model=model, tokenizer=tokenizer)
+    trainer = GeneralizedTrainer(
+        model=model, processing_class=tokenizer, task_type=task_type
+    )
     prediction_output = trainer.predict(test_dataset)
     logits = prediction_output.predictions
 
@@ -614,12 +713,95 @@ def predict_and_evaluate(
         print("Plotting multilabel confusion matrix...")
         _plot_multilabel_confusion_matrix(labels, predicted_values, figures_dir)
 
+        if np.all(labels.sum(axis=1) == 1):
+            print("Plotting multiclass confusion matrix...")
+            _plot_multiclass_confusion_matrix(labels, probs, label_names, figures_dir)
+
         print("Plotting multilabel label counts...")
         _plot_multilabel_label_counts(
             labels,
             predicted_values,
             label_names,
             figures_dir,
+        )
+
+    elif task_type == "multiclass_classification":
+        labels = prediction_output.label_ids.astype(int).reshape(-1)
+        probs = softmax(logits, axis=-1)
+        predicted_values = probs.argmax(axis=1)
+        num_classes = probs.shape[1]
+
+        model_config = getattr(model, "config", None)
+        label2id = _read_dataset_label2id(dataset_dir) or getattr(
+            model_config,
+            "label2id",
+            None,
+        )
+        label_names = _label_names_from_label2id(label2id, num_classes)
+
+        metrics = _multiclass_metrics(labels, predicted_values, probs, label_names)
+        metrics_file = os.path.join(output_dir, "metrics.json")
+        _write_json(metrics_file, metrics)
+        print(f"Metrics saved to {metrics_file}")
+        print(
+            "Multiclass metrics: "
+            f"accuracy={metrics['accuracy']:.2f}, "
+            f"F1 macro={metrics['f1_macro']:.2f}, "
+            f"F1 weighted={metrics['f1_weighted']:.2f}"
+        )
+        print(
+            classification_report(
+                labels,
+                predicted_values,
+                labels=range(num_classes),
+                target_names=label_names,
+                zero_division=0,
+            )
+        )
+
+        labels_one_hot = np.eye(num_classes, dtype=int)[labels]
+        predictions_one_hot = np.eye(num_classes, dtype=int)[predicted_values]
+
+        _write_multilabel_per_class_metrics(
+            labels_one_hot,
+            predictions_one_hot,
+            probs,
+            label_names,
+            output_dir,
+            filename="multiclass_per_class_metrics.csv",
+        )
+
+        print("Plotting multiclass ROC curves...")
+        _plot_multilabel_roc(
+            labels_one_hot,
+            probs,
+            label_names,
+            figures_dir,
+            output_filename="multiclass_roc_curves.png",
+            title="Multiclass ROC Curves (one-vs-rest)",
+        )
+
+        print("Plotting multiclass Precision-Recall curves...")
+        _plot_multilabel_precision_recall(
+            labels_one_hot,
+            probs,
+            label_names,
+            figures_dir,
+            output_filename="multiclass_precision_recall_curves.png",
+            title="Multiclass Precision-Recall Curves (one-vs-rest)",
+        )
+
+        print("Plotting multiclass confusion matrix...")
+        _plot_multiclass_confusion_matrix(labels_one_hot, probs, label_names, figures_dir)
+
+        print("Plotting multiclass class counts...")
+        _plot_multilabel_label_counts(
+            labels_one_hot,
+            predictions_one_hot,
+            label_names,
+            figures_dir,
+            output_filename="multiclass_class_counts.png",
+            title="True vs Predicted Class Counts",
         )
 
 
@@ -677,7 +859,12 @@ if __name__ == "__main__":
         "--task_type",
         type=str,
         required=True,
-        choices=["binary_classification", "multilabel_classification", "regression"],
+        choices=[
+            "binary_classification",
+            "multilabel_classification",
+            "multiclass_classification",
+            "regression",
+        ],
         help="Type of task to evaluate.",
     )
     parser.add_argument(
