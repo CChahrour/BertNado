@@ -57,6 +57,9 @@ class Attributer:
         elif self.task_type == "multilabel_classification":
             task = "text-classification"
             device = 0 if torch.cuda.is_available() else -1
+        elif self.task_type == "multiclass_classification":
+            task = "text-classification"
+            device = 0 if torch.cuda.is_available() else -1
         elif self.task_type == "regression":
             task = "text-regression"
             device = 0 if torch.cuda.is_available() else -1
@@ -185,7 +188,10 @@ if __name__ == "__main__":
         "--task_type",
         type=str,
         required=True,
-        help="Task type: binary_classification, multilabel_classification, or regression.",
+        help=(
+            "Task type: binary_classification, multilabel_classification, "
+            "multiclass_classification, or regression."
+        ),
     )
     parser.add_argument(
         "--target_class",

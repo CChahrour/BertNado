@@ -1,4 +1,4 @@
-from torch.nn.modules.loss import BCEWithLogitsLoss, MSELoss
+from torch.nn.modules.loss import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
 from transformers.trainer import Trainer as HFTrainer
 from .metrics import compute_metrics_regression
 
@@ -16,9 +16,10 @@ class GeneralizedTrainer(HFTrainer):
         outputs = model(**inputs)
         logits = outputs.logits
 
-        labels = labels.to(logits.device).float()
+        labels = labels.to(logits.device)
 
         if self.task_type == "binary_classification":
+            labels = labels.float()
             if logits.ndim > 1 and logits.size(-1) == 1:
                 logits = logits.squeeze(-1)  # Ensure logits are 1D for binary classification
             loss_fct = BCEWithLogitsLoss(
@@ -28,13 +29,25 @@ class GeneralizedTrainer(HFTrainer):
             )
             loss = loss_fct(logits, labels)
         elif self.task_type == "multilabel_classification":
+            labels = labels.float()
             loss_fct = BCEWithLogitsLoss(
                 pos_weight=self.pos_weight.to(logits.device)
                 if self.pos_weight is not None
                 else None
             )
             loss = loss_fct(logits, labels)
+        elif self.task_type == "multiclass_classification":
+            labels = labels.long()
+            if labels.ndim > 1:
+                labels = labels.squeeze(-1)
+            loss_fct = CrossEntropyLoss(
+                weight=self.pos_weight.to(logits.device)
+                if self.pos_weight is not None
+                else None
+            )
+            loss = loss_fct(logits, labels)
         elif self.task_type == "regression":
+            labels = labels.float()
             loss_fct = MSELoss()
             loss = loss_fct(logits.squeeze(-1), labels)
         else:

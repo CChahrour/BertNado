@@ -125,7 +125,7 @@ if __name__ == "__main__":
         "--task_type",
         type=str,
         required=True,
-        choices=["binary_classification", "multilabel_classification", "regression"],
+        choices=["binary_classification", "multilabel_classification", "multiclass_classification", "regression"],
         help="Type of task to fine-tune for.",
     )
     parser.add_argument(

@@ -54,3 +54,25 @@ def multi_label_classification_metrics(pred):
         "recall": recall,
         "roc_auc": roc_auc,
     }
+
+
+def multiclass_classification_metrics(pred):
+    logits, labels = pred
+    probs = torch.softmax(torch.tensor(logits), dim=-1).numpy()
+    predictions = probs.argmax(axis=-1)
+    labels = labels.astype(int).reshape(-1)
+    accuracy = accuracy_score(labels, predictions)
+    f1 = f1_score(labels, predictions, average="macro", zero_division=0)
+    precision = precision_score(labels, predictions, average="macro", zero_division=0)
+    recall = recall_score(labels, predictions, average="macro", zero_division=0)
+    try:
+        roc_auc = roc_auc_score(labels, probs, multi_class="ovr", average="macro")
+    except ValueError:
+        roc_auc = float("nan")
+    return {
+        "accuracy": accuracy,
+        "f1": f1,
+        "precision": precision,
+        "recall": recall,
+        "roc_auc": roc_auc,
+    }
