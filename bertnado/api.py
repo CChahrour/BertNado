@@ -275,6 +275,8 @@ def train_model(
 
     from bertnado.training.full_train import FullTrainer
 
+    early_stopping_patience = training_kwargs.pop("early_stopping_patience", None)
+
     trainer = FullTrainer(
         model_name=model_name,
         dataset=_path(dataset),
@@ -285,6 +287,7 @@ def train_model(
         metric_name=metric_name,
         metric_goal=metric_goal,
         training_args=training_kwargs,
+        early_stopping_patience=early_stopping_patience,
     )
     return trainer.train(_path(best_config_path))
 
