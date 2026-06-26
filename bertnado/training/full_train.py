@@ -17,6 +17,7 @@ class FullTrainer:
         metric_name=None,
         metric_goal=None,
         training_args=None,
+        early_stopping_patience=3,
     ):
         self.model_name = model_name
         self.dataset = dataset
@@ -27,6 +28,7 @@ class FullTrainer:
         self.metric_name = metric_name
         self.metric_goal = metric_goal
         self.training_args = dict(training_args or {})
+        self.early_stopping_patience = early_stopping_patience
         self.job_type = "full_train"
 
     def train(self, best_config_path):
@@ -52,6 +54,7 @@ class FullTrainer:
             project_name=self.project_name,
             pos_weight=self.pos_weight,
             job_type="full_train",
+            early_stopping_patience=self.early_stopping_patience,
         )
         fine_tuner.fine_tune(config)
 
@@ -124,6 +127,12 @@ if __name__ == "__main__":
         default=None,
         help="Whether the optimization metric should be maximized or minimized.",
     )
+    parser.add_argument(
+        "--early_stopping_patience",
+        type=int,
+        default=3,
+        help="Number of eval steps with no improvement before stopping early. Set to 0 to disable.",
+    )
 
     args = parser.parse_args()
 
@@ -136,5 +145,6 @@ if __name__ == "__main__":
         pos_weight=args.pos_weight,
         metric_name=args.metric_name,
         metric_goal=args.metric_goal,
+        early_stopping_patience=args.early_stopping_patience or None,
     )
     trainer.train(args.best_config_path)

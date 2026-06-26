@@ -6,7 +6,7 @@ from inspect import signature
 
 import torch
 from datasets import load_from_disk
-from transformers import AutoModelForSequenceClassification, TrainingArguments
+from transformers import AutoModelForSequenceClassification, EarlyStoppingCallback, TrainingArguments
 
 import wandb
 from bertnado.training.metrics import (
@@ -194,6 +194,7 @@ class FineTuner:
         project_name,
         job_type,
         pos_weight=None,
+        early_stopping_patience=None,
     ):
         self.model_name = model_name
         self.dataset = dataset
@@ -202,6 +203,7 @@ class FineTuner:
         self.project_name = project_name
         self.pos_weight = pos_weight
         self.job_type = job_type
+        self.early_stopping_patience = early_stopping_patience
 
     def fine_tune(self, config=None, metric_name=None, metric_goal=None, sweep_config=None):
         """Fine-tune the model using the provided configuration."""
@@ -256,8 +258,15 @@ class FineTuner:
             raise ValueError(f"Unsupported task type: {self.task_type}")
 
         # Load model
+        model_kwargs = {"num_labels": num_labels}
+        
+        # For binary classification with num_labels=1, explicitly set id2label to avoid warnings
+        if self.task_type == "binary_classification" and num_labels == 1:
+            model_kwargs["id2label"] = {0: "negative"}
+            model_kwargs["label2id"] = {"negative": 0}
+        
         model = AutoModelForSequenceClassification.from_pretrained(
-            self.model_name, num_labels=num_labels
+            self.model_name, **model_kwargs
         ).to(device)
 
         training_args = TrainingArguments(
@@ -302,6 +311,10 @@ class FineTuner:
 
 
 
+        callbacks = []
+        if self.early_stopping_patience is not None:
+            callbacks.append(EarlyStoppingCallback(early_stopping_patience=self.early_stopping_patience))
+
         # Define Trainer
         trainer = GeneralizedTrainer(
             model=model,
@@ -311,6 +324,7 @@ class FineTuner:
             task_type=self.task_type,
             pos_weight=self.pos_weight,
             compute_metrics=compute_metrics,
+            callbacks=callbacks or None,
         )
 
         # Train the model
