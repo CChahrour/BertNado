@@ -155,7 +155,7 @@ wheels = [
 
 [[package]]
 name = "anndata"
-version = "0.12.14"
+version = "0.12.18"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "array-api-compat" },
@@ -169,9 +169,9 @@ dependencies = [
     { name = "scverse-misc" },
     { name = "zarr" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f6/57/98b52c39e0f1e641328f56e64fb64ea63df6d36660b948549c6bdb9fa409/anndata-0.12.14.tar.gz", hash = "sha256:52c852246eae20b469753f51f1481e034fb15f5218878f8695fd0e111c4c6da1", size = 2255427, upload-time = "2026-05-12T13:47:02.826Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0f/02/e74c34c6668e04e3092f0224620f9eb4e3abfd8fca7bed2e790086a21e8e/anndata-0.12.18.tar.gz", hash = "sha256:8c14e1814a4119ae92cdfb5d2d1365e0044829e9eaed8f03522cb0eaddd0ccc5", size = 2257885, upload-time = "2026-06-23T09:26:36.702Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fb/5d/3cf0e5d56dcdbf5fece4ba37a0880b580d5a980c8e7c737d9dd45fbe4306/anndata-0.12.14-py3-none-any.whl", hash = "sha256:16a13adef352b6e2501de240b00a37e14c1b63700fb9d4c85f69d608e50817c9", size = 175269, upload-time = "2026-05-12T13:47:00.877Z" },
+    { url = "https://files.pythonhosted.org/packages/a2/d3/e0ce94d247ccc5240c6433f44155c3acdc54e812418f7d88c596bde845a3/anndata-0.12.18-py3-none-any.whl", hash = "sha256:23b97a2f449fa2b900f9bbbe1712d36d6f9d6d680feb21144e1c72802af1f014", size = 176113, upload-time = "2026-06-23T09:26:34.835Z" },
 ]
 
 [[package]]
