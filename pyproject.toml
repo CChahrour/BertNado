@@ -41,10 +41,10 @@ dependencies = [
 dev = [
     "mkdocs-material==9.7.6",
     "mkdocs>=1.6,<2.0",
-    "mkdocs-jupyter==0.25.1",
+    "mkdocs-jupyter==0.26.3",
     "mkdocstrings-python==2.0.3",
     "mkdocstrings==1.0.3",
-    "pymdown-extensions==10.21",
+    "pymdown-extensions==10.21.3",
     "pytest==9.0.3",
     "pytest-cov==7.0.0",
     "pytest-xdist>=3.0",
