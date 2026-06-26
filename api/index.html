@@ -1229,7 +1229,7 @@ feature attribution from notebooks, scripts, or larger Python applications.</p>
 
 
 <h2 id="bertnado.api.prepare_dataset" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">prepare_dataset</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">target_column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fasta_file</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">task_type</span><span class="p">:</span> <span class="n">TaskType</span><span class="p">,</span> <span class="n">tokenizer_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_TOKENIZER_NAME</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span></code>
+            <code class="highlight language-python"><span class="n">prepare_dataset</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">target_column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fasta_file</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">task_type</span><span class="p">:</span> <span class="n">TaskType</span><span class="p">,</span> <span class="n">tokenizer_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_TOKENIZER_NAME</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">label2id</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span></code>
 
 <a href="#bertnado.api.prepare_dataset" class="headerlink" title="Permanent link">&para;</a></h2>
 
@@ -1330,7 +1330,8 @@ prediction target.</p>
             <td>
               <div class="doc-md-description">
                 <p>Learning task. Must be <code>"binary_classification"</code>,
-<code>"multilabel_classification"</code>, or <code>"regression"</code>.</p>
+<code>"multilabel_classification"</code>, <code>"multiclass_classification"</code>, or
+<code>"regression"</code>.</p>
               </div>
             </td>
             <td>
@@ -1369,6 +1370,25 @@ binary classification. Defaults to <code>0.5</code>.</p>
             </td>
             <td>
                   <code>0.5</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>label2id</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span>[<span title="str">str</span>, <span title="int">int</span>] | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional explicit class name -&gt; class index mapping for
+<code>"multiclass_classification"</code>. When omitted, BertNado builds the
+mapping from the sorted unique values of <code>target_column</code> and writes
+it to <code>label2id.json</code> in <code>output_dir</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
             </td>
           </tr>
       </tbody>
@@ -1534,7 +1554,8 @@ lookup.</p>
             <td>
               <div class="doc-md-description">
                 <p>Learning task. Must be <code>"binary_classification"</code>,
-<code>"multilabel_classification"</code>, or <code>"regression"</code>.</p>
+<code>"multilabel_classification"</code>, <code>"multiclass_classification"</code>, or
+<code>"regression"</code>.</p>
               </div>
             </td>
             <td>
@@ -1781,7 +1802,8 @@ should be saved.</p>
             <td>
               <div class="doc-md-description">
                 <p>Learning task. Must be <code>"binary_classification"</code>,
-<code>"multilabel_classification"</code>, or <code>"regression"</code>.</p>
+<code>"multilabel_classification"</code>, <code>"multiclass_classification"</code>, or
+<code>"regression"</code>.</p>
               </div>
             </td>
             <td>
@@ -2022,7 +2044,8 @@ be saved.</p>
             <td>
               <div class="doc-md-description">
                 <p>Learning task. Must be <code>"binary_classification"</code>,
-<code>"multilabel_classification"</code>, or <code>"regression"</code>.</p>
+<code>"multilabel_classification"</code>, <code>"multiclass_classification"</code>, or
+<code>"regression"</code>.</p>
               </div>
             </td>
             <td>
@@ -2208,7 +2231,8 @@ saved.</p>
             <td>
               <div class="doc-md-description">
                 <p>Learning task. Must be <code>"binary_classification"</code>,
-<code>"multilabel_classification"</code>, or <code>"regression"</code>.</p>
+<code>"multilabel_classification"</code>, <code>"multiclass_classification"</code>, or
+<code>"regression"</code>.</p>
               </div>
             </td>
             <td>
@@ -2442,7 +2466,8 @@ saved.</p>
             <td>
               <div class="doc-md-description">
                 <p>Learning task. Must be <code>"binary_classification"</code>,
-<code>"multilabel_classification"</code>, or <code>"regression"</code>.</p>
+<code>"multilabel_classification"</code>, <code>"multiclass_classification"</code>, or
+<code>"regression"</code>.</p>
               </div>
             </td>
             <td>
