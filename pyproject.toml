@@ -19,7 +19,7 @@ dynamic = ["version"]
 dependencies = [
     "anndata>=0.12",
     "captum==0.9.0",
-    "click==8.3.3",
+    "click==8.4.2",
     "crested>=1.4.1",
     "datasets>=3.6.0",
     "loguru==0.7.3",
